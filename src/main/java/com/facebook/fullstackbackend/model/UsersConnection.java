@@ -20,6 +20,67 @@ public class UsersConnection {
         return graph.registerVertex(graph, username);
     }
 
+    public void viewAccount(User user){
+        System.out.println("\tAbout");
+        System.out.println("-------------------------");
+        System.out.println("Basic info");
+        System.out.println("-------------------------");
+        System.out.println("Gender: " + user.getGender());
+        System.out.println("Birthday: " + user.getBirthday());
+        System.out.println("Age: " + user.getAge());
+        System.out.println("-------------------------");
+        System.out.println("Contact info");
+        System.out.println("-------------------------");
+        System.out.println("Email address: " + user.getEmail());
+        System.out.println("Phone number: " + user.getPhoneNo());
+        System.out.println("-------------------------");
+        System.out.println("Other info");
+        System.out.println("-------------------------");
+        System.out.println("Relationship status: " + user.getStatus());
+        System.out.println("Address: " + user.getAddress());
+        System.out.println("Hobby: " + user.getHobbies().get(0));
+        String currentJob = user.getJobs().pop();
+        System.out.println("Current job: " + currentJob);
+        if(user.getJobs().size()>1){
+            System.out.println("Previous job: " + user.getJobs().peek());
+        }
+        user.getJobs().push(currentJob);
+        System.out.println("*************************");            
+    }
+
+    public User editAccount(User user){
+        int choice = 1;
+        while(choice>0){
+            System.out.println("Edit Account");
+            System.out.println("-------------------------");
+            System.out.println("1 - Password");
+            System.out.println("2 - Name");
+            System.out.println("3 - Birthday");
+            System.out.println("4 - Address");
+            System.out.println("5 - Gender");
+            System.out.println("6 - Relationship status");
+            System.out.println("7 - Hobby");
+            System.out.println("8 - Jobs");
+            System.out.println("0 - Exit");
+            System.out.println("*************************");
+            choice = sc.nextInt();
+            sc.nextLine();
+            System.out.println("*************************");
+            switch(choice){
+                case 1 -> user = builder.editPassword(user);
+                case 2 -> user = builder.editName(user);
+                case 3 -> user = builder.editBirthday(user);
+                case 4 -> user = builder.editAddress(user);
+                case 5 -> user = builder.editGender(user);
+                case 6 -> user = builder.editStatus(user);
+                case 7 -> user = builder.editHobbies(user);
+                case 8 -> user = builder.editJobs(user);
+            }
+        }
+        System.out.println("*************************");
+        return user;
+    }
+
     public ArrayList<User> getMutual(User u1, User u2, ConnectionGraph<String> graph){
         ArrayList<User> mutual = new ArrayList<>();
         String v1 = graph.getVertex(graph, u1.getUsername());
@@ -35,20 +96,6 @@ public class UsersConnection {
             }
         }
         return mutual;
-    }
-
-    public User displayMutual(ArrayList<User> mutual){
-        // Display appropriate message if have 0 mutual friend
-        if(mutual.size()==0){
-            System.out.println("No mutual friend");
-            return null;
-        }
-
-        for(int i=1; i<=mutual.size(); i++){
-            System.out.println(i + " - " + mutual.get(i-1));
-        }
-        int choice = sc.nextInt();
-        return mutual.get(choice-1);
     }
 
     public int getTotalMutual(User u1, User u2, ConnectionGraph<String> graph){

@@ -17,12 +17,17 @@ public class User {
     private String birthday;
     private int age;
     private String address;
-    private char gender;
+    private Gender gender;
     private String status;
     private int noOfFriends;
     private ArrayList<String> hobbies;
     private Stack<String> jobs;
     private Stack<String> requestList;
+    private int noOfPost;
+    enum Gender{
+        MALE,
+        FEMALE
+    }
 
     public User(UserBuilder builder){
         this.accountID = builder.accountID;
@@ -41,7 +46,7 @@ public class User {
         this.hobbies = builder.hobbies;
         this.jobs = builder.jobs;
         this.requestList = builder.requestList;
-
+        this.noOfPost = builder.noOfPost;
     }
 
     public void setAccountID(){
@@ -114,10 +119,13 @@ public class User {
         return address;
     }
 
-    public void setGender(char gender){
+    public void setGender(String gender){
+        this.gender = Gender.valueOf(gender.toUpperCase());
+    }
+    public void setGender(User.Gender gender){
         this.gender = gender;
     }
-    public char getGender(){
+    public Gender getGender(){
         return gender;
     }
 
@@ -163,6 +171,13 @@ public class User {
     }
     public Stack<String> getRequestList(){
         return requestList;
+    }
+
+    public void setNoOfPost(int noOfPost){
+        this.noOfPost = noOfPost;
+    }
+    public int getNoOfPost(){
+        return noOfPost;
     }
 
 }

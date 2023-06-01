@@ -32,9 +32,11 @@ public class FullstackBackendApplication {
                 if(user!=null){
                 int choice1 = 1;
                 while(choice1>0){
+                        System.out.println("\tHome Page");
+                        System.out.println("------------------------------");
                         System.out.println("0 - Log out");
-                        System.out.println("1 - Search friend");
-                        System.out.println("2 - Friend requests");
+                        System.out.println("1 - My Page");
+                        System.out.println("2 - Search Facebook");
                         System.out.println("3 - Your friends");
                         System.out.println("4 - Suggestions");
                         System.out.println("*************************");
@@ -42,16 +44,12 @@ public class FullstackBackendApplication {
                         sc.nextLine();
                         System.out.println("*************************");
                         switch(choice1){
-                        case 1: manager.searchFriend();
-                                break;
-                        case 2: manager.displayRequest();
-                                break;
-                        case 3: manager.displayFriends();
-                                break;
-                        case 4: manager.displayRecommendedUsers();
-                                break;
+                                case 1 -> manager.viewMyPage();
+                                case 2 -> manager.searchUsers();
+                                case 3 -> manager.displayFriends();
+                                case 4 -> manager.displayRecommendedUsers();
+                        }
                 }
-            }
         }
 }
 
