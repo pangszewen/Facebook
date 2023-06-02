@@ -326,6 +326,7 @@ public class UserBuilder {
         switch(choice){
             case 1: System.out.print("New hobby: ");
                     String hobby = sc.nextLine();
+                    System.out.println("*************************");
                     // Update user object
                     user.getHobbies().add(hobby);
                     break;
@@ -334,7 +335,9 @@ public class UserBuilder {
                     for(int i=0; i<user.getHobbies().size(); i++){
                         System.out.println((i+1) + " - " + user.getHobbies().get(i));
                     }
+                    System.out.println("*************************");
                     choice = sc.nextInt();
+                    System.out.println("*************************");
                     // Update user object
                     // Change the desired hobby to be in index 0
                     String temp = user.getHobbies().get(choice-1);
@@ -346,7 +349,9 @@ public class UserBuilder {
                     for(int i=0; i<user.getHobbies().size(); i++){
                         System.out.println((i+1) + " - " + user.getHobbies().get(i));
                     }
+                    System.out.println("*************************");
                     choice = sc.nextInt();
+                    System.out.println("*************************");
                     // Update user object
                     user.getHobbies().remove(choice-1);
                     break;

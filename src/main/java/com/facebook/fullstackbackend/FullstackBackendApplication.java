@@ -19,16 +19,22 @@ public class FullstackBackendApplication {
 
                 System.out.println("\tFacebook");
                 System.out.println("------------------------------");
-                System.out.println("1 - Register");
-                System.out.println("2 - Login");
-                int choice = sc.nextInt();
-                switch(choice){
-                        case 1: manager.registration();
-                                user = manager.login();
-                                break;
-                        case 2: user = manager.login();
-                                break;
-                }       
+                int choice = 0;
+                while(choice!=1 && choice!=2){
+                        System.out.println("1 - Register");
+                        System.out.println("2 - Login");
+                        System.out.println("*************************");
+                        choice = sc.nextInt();
+                        System.out.println("*************************");
+                
+                        switch(choice){
+                                case 1: manager.registration();
+                                        user = manager.login();
+                                        break;
+                                case 2: user = manager.login();
+                                        break;
+                        }  
+                }     
                 if(user!=null){
                 int choice1 = 1;
                 while(choice1>0){
@@ -41,7 +47,6 @@ public class FullstackBackendApplication {
                         System.out.println("4 - Suggestions");
                         System.out.println("*************************");
                         choice1 = sc.nextInt();
-                        sc.nextLine();
                         System.out.println("*************************");
                         switch(choice1){
                                 case 1 -> manager.viewMyPage();

@@ -480,13 +480,15 @@ public class DatabaseSql<T> {
             conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/database", "root", "");
 
             // Insert data into post table
-            pstmt = conn.prepareStatement("INSERT INTO post (postID, userID, status, content, likes, comments) VALUES (?, ?, ?, ?, ?, ?)");
+            pstmt = conn.prepareStatement("INSERT INTO post (postID, userID, status, content, likes, comments, likeList, commentList) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
             pstmt.setString(1, post.getPostID());
             pstmt.setString(2, post.getUserID());
             pstmt.setString(3, String.valueOf(post.geStatus()));
             pstmt.setString(4, post.getContent());
             pstmt.setInt(5, post.getLikes());
             pstmt.setInt(6, post.getComments());
+            pstmt.setString(7, "");
+            pstmt.setString(8, "");
             pstmt.executeUpdate();
         } catch (Exception ex) {
             ex.printStackTrace();
@@ -575,7 +577,7 @@ public class DatabaseSql<T> {
 
             // Read from useraccount table
             pstmt = conn.prepareStatement("SELECT * FROM post WHERE userID = ?");
-            pstmt.setString(1, user.getUsername());
+            pstmt.setString(1, user.getAccountID());
             ResultSet rs = pstmt.executeQuery();
 
             while(rs.next()) {

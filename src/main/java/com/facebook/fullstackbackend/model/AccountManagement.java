@@ -1,6 +1,5 @@
 package com.facebook.fullstackbackend.model;
 
-import java.io.OutputStream;
 import java.time.LocalDate;
 import java.time.Period;
 import java.util.ArrayList;
@@ -194,7 +193,9 @@ public class AccountManagement {
             choice = sc.nextInt();
             System.out.println("*************************");
             switch(choice){
-                case 1: int choicePost = 1;
+                case 1: System.out.println("Posts");
+                        System.out.println("-------------------------");
+                        int choicePost = 1;
                         while(choicePost>0){
                             System.out.println("0 - Back");
                             System.out.println("1 - Create post");
@@ -225,6 +226,7 @@ public class AccountManagement {
                         break;
 
                 case 3: System.out.println("<" + user.getNoOfFriends() + " friends>");
+                        System.out.println("-------------------------");
                         int choiceFriend = 1;
                         while(choiceFriend>0){
                             System.out.println("0 - Back");
@@ -233,6 +235,7 @@ public class AccountManagement {
                             System.out.println("3 - Search friend");
                             System.out.println("*************************");
                             choiceFriend = sc.nextInt();
+                            sc.nextLine();
                             System.out.println("*************************");
                             switch(choiceFriend){
                                 case 1 -> displayFriends(user);
@@ -247,13 +250,13 @@ public class AccountManagement {
     }
 
     public void viewOtherPage(User u1){
-        // TRUE when is friend, FALSE when not friend
-        boolean isFriend = graph.hasEdge(graph, user.getUsername(), u1.getUsername());
-        // TRUE when already requested, FALSE when not yet request
-        boolean statusRequest = connection.checkRequest(user, u1);
-
         int choice = 1;
         while(choice>0){
+            // TRUE when is friend, FALSE when not friend
+            boolean isFriend = graph.hasEdge(graph, user.getUsername(), u1.getUsername());
+            // TRUE when already requested, FALSE when not yet request
+            boolean statusRequest = connection.checkRequest(user, u1);
+
             System.out.println("\u001B[1m" + u1.getName() + "\u001B[0m");
             if(isFriend)
                 System.out.println("\"Friend\"");
@@ -300,6 +303,7 @@ public class AccountManagement {
                         break;
 
                 case 3: System.out.println("<" + u1.getNoOfFriends() + " friends>");
+                        System.out.println("-------------------------");
                         int choiceFriend = 1;
                         while(choiceFriend>0){
                             System.out.println("0 - Back");
@@ -308,6 +312,7 @@ public class AccountManagement {
                             System.out.println("3 - Search friend");
                             System.out.println("*************************");
                             choiceFriend = sc.nextInt();
+                            sc.nextLine();
                             System.out.println("*************************");
                             switch(choiceFriend){
                                 case 1 -> displayFriends(u1);
@@ -334,64 +339,79 @@ public class AccountManagement {
     }
 
     public void searchFriend(User u1){
-        System.out.println("Enter search keyword:");
-        sc.nextLine();
-        String emailOrPhoneNoOrUsernameOrName =  sc.nextLine();
-        System.out.println("*************************"); 
-        ArrayList<User> result = database.ifContains(emailOrPhoneNoOrUsernameOrName);     // ArrayList of user objects of search result
+        int choice = 1;
+        while(choice>0){
+            System.out.println("Enter search keyword:");
+            String emailOrPhoneNoOrUsernameOrName =  sc.nextLine();
+            System.out.println("*************************"); 
+            ArrayList<User> result = database.ifContains(emailOrPhoneNoOrUsernameOrName);     // ArrayList of user objects of search result
+            ArrayList<String> usernameResult = new ArrayList<>();
 
-        for(User x : result){
-            if(!graph.hasEdge(graph, u1.getUsername(), x.getUsername()))
-                result.remove(x);
-        }
+            for(User x: result){
+                usernameResult.add(x.getUsername());
+            }
+            result.clear();
+            for(String x : usernameResult){
+                if(graph.hasEdge(graph, u1.getUsername(), x))
+                    result.add(database.getProfile(x));
+            }
 
-        // Sort the names alphabetically
-        for(int i=1; i<result.size(); i++){
-            for(int j=0; j<i; j++){
-                if(result.get(i).getName().compareTo(result.get(j).getName())<0){
-                    User temp = result.get(i);
-                    result.set(i, result.get(j));
-                    result.set(j, temp);
+            // Sort the names alphabetically
+            for(int i=1; i<result.size(); i++){
+                for(int j=0; j<i; j++){
+                    if(result.get(i).getName().compareTo(result.get(j).getName())<0){
+                        User temp = result.get(i);
+                        result.set(i, result.get(j));
+                        result.set(j, temp);
+                    }
                 }
             }
-        }
 
-        int choice = 1;
-        if(result.size()==0){
-            System.out.println("No result found.");
-            choice = 0;
-            System.out.println("*************************");
-        }
-
-        while(choice>0){
-            // Display all search result
-            int count = 1;
-            for(User x : result){
-                String title = "Friend";
-                if(x.getUsername().equals(user.getUsername()))
-                    title = "You";
-                System.out.println(count + " - " + x.getName() + " \"" + title + "\"");
-                count++;
-            }
-            
-            // Select to view searched account
-            System.out.println("Enter 0 to exit.");
-            System.out.println("*************************");
-            choice = sc.nextInt();
-            System.out.println("*************************");
-
-            // Condition if selection out of index bound
-            while(choice>result.size()){
-                System.out.println("Choice out of bound. Please select again.");
+            if(result.size()==0){
+                System.out.println("No result found.");
+                System.out.println("0 - Back");
+                System.out.println("1 - Search again");
+                System.out.println("*************************");
                 choice = sc.nextInt();
+                sc.nextLine();
+                System.out.println("*************************");
+                if(choice == 1)
+                    choice = result.size()+1;
             }
 
-            // If choice in range, view account; else continue
-            if(choice>0){
-                if(result.get(choice-1).getUsername() != user.getUsername())
-                    viewOtherPage(result.get(choice-1));
-                else
-                    viewMyPage();
+            while(choice>0 && choice<result.size()+1){
+                // Display all search result
+                System.out.println("0 - Back");
+                int count = 1;
+                for(User x : result){
+                    String title = "Friend";
+                    if(x.getUsername().equals(user.getUsername()))
+                        title = "You";
+                    System.out.println(count + " - " + x.getName() + " \"" + title + "\"");
+                    count++;
+                }
+            
+                System.out.println("-------------------------");
+                System.out.println(result.size()+1 + " - Search again");
+                System.out.println("-1 - Back to Friends tab");
+                System.out.println("*************************");
+                // Select to view searched account
+                choice = sc.nextInt();
+                System.out.println("*************************");
+
+                // Condition if selection out of index bound
+                while(choice>result.size()+1){
+                    System.out.println("Choice out of bound. Please select again.");
+                    choice = sc.nextInt();
+                }
+
+                // If choice in range, view account; else continue
+                if(choice>0 && choice<result.size()+1){
+                    if(result.get(choice-1).getUsername() != user.getUsername())
+                        viewOtherPage(result.get(choice-1));
+                    else
+                        viewMyPage();
+                }
             }
         }
     }
@@ -399,71 +419,78 @@ public class AccountManagement {
     // Display search users and view account of search users
     // Able to send or take back friend request
     public void searchUsers(){
-        System.out.println("Press ENTER to start search");
-        sc.nextLine();
-        System.out.println("Enter search keyword:");
-        String emailOrPhoneNoOrUsernameOrName =  sc.nextLine();
-        System.out.println("*************************");
-        ArrayList<User> result = database.ifContains(emailOrPhoneNoOrUsernameOrName);     // ArrayList of user objects of search result
+        int searchAgain = 1;
+        while(searchAgain>=0){
+            sc.nextLine();
+            System.out.println("Enter search keyword:");
+            String emailOrPhoneNoOrUsernameOrName =  sc.nextLine();
+            System.out.println("*************************");
+            ArrayList<User> result = database.ifContains(emailOrPhoneNoOrUsernameOrName);     // ArrayList of user objects of search result
 
-        // Sort the names alphabetically
-        for(int i=1; i<result.size(); i++){
-            for(int j=0; j<i; j++){
-                if(result.get(i).getName().compareTo(result.get(j).getName())<0){
-                    User temp = result.get(i);
-                    result.set(i, result.get(j));
-                    result.set(j, temp);
+            // Sort the names alphabetically
+            for(int i=1; i<result.size(); i++){
+                for(int j=0; j<i; j++){
+                    if(result.get(i).getName().compareTo(result.get(j).getName())<0){
+                        User temp = result.get(i);
+                        result.set(i, result.get(j));
+                        result.set(j, temp);
+                    }
                 }
             }
-        }
 
-        int choice = 1;
-        if(result.size()==0){
-            System.out.println("No result found.");
-            choice = 0;
-            System.out.println("*************************");
-        }
-
-        while(choice>0){
-            // Display all search result
-            int count = 1;
-            for(User x : result){
-                String title = "New";
-                if(x.getUsername().equals(user.getUsername()))
-                    title = "You";
-                else if(graph.hasEdge(graph, user.getUsername(), x.getUsername()))
-                    title = "Friend";
-                System.out.println(count + " - " + x.getName() + " \"" + title + "\"");
-                count++;
+            int choice = 1;
+            if(result.size()==0){
+                System.out.println("No result found.");
+                choice = 0;
+                System.out.println("*************************");
             }
+
+            while(choice>0){
+                // Display all search result
+                int count = 1;
+                for(User x : result){
+                    String title = "New";
+                    if(x.getUsername().equals(user.getUsername()))
+                        title = "You";
+                    else if(graph.hasEdge(graph, user.getUsername(), x.getUsername()))
+                        title = "Friend";
+                    System.out.println(count + " - " + x.getName() + " \"" + title + "\"");
+                    count++;
+                }
             
-            // Select to view searched account
-            System.out.println("Enter 0 to exit.");
-            System.out.println("*************************");
-            choice = sc.nextInt();
-            System.out.println("*************************");
-
-            // Condition if selection out of index bound
-            while(choice>result.size()){
-                System.out.println("Choice out of bound. Please select again.");
+                // Select to view searched account
+                System.out.println("0 - Back");
+                System.out.println("-1 - Back to homepage");
+                System.out.println("*************************");
                 choice = sc.nextInt();
-            }
+                searchAgain = choice;
+                System.out.println("*************************");
 
-            // If choice in range, view account; else continue
-            if(choice>0){
-                if(result.get(choice-1).getUsername() != user.getUsername())
-                    viewOtherPage(result.get(choice-1));
-                else
-                    viewMyPage();
+                // Condition if selection out of index bound
+                while(choice>result.size()){
+                    System.out.println("Choice out of bound. Please select again.");
+                    choice = sc.nextInt();
+                }
+
+                // If choice in range, view account; else continue
+                if(choice>0){
+                    if(result.get(choice-1).getUsername() != user.getUsername())
+                        viewOtherPage(result.get(choice-1));
+                    else
+                        viewMyPage();
+                }
             }
         }
     }
 
     public void displayRequest(){
         ArrayList<User> requestList = database.getRequestList(user);
+        System.out.println("<" + requestList.size() + " friend requests>");
         for(int i=0; i<requestList.size(); i++){
+            System.out.println("-------------------------");
             System.out.println(requestList.get(i).getName());
             System.out.println("(" + connection.getTotalMutual(user, requestList.get(i), graph) + " mutuals)");
+            System.out.println("-------------------------");
             System.out.println("0 - Next");
             System.out.println("1 - Confirm request");
             System.out.println("2 - Delete request");
@@ -480,6 +507,7 @@ public class AccountManagement {
 
             }
         }
+        System.out.println("*************************");
     }
 
     // Method for displayFriends(user) with no arguments
@@ -489,36 +517,39 @@ public class AccountManagement {
 
     // Method for displayFriends(anyone) with user object as argument
     public void displayFriends(User u1){
+        ArrayList<String> friends = new ArrayList<>();
         int choice = 1;
-        while(choice>0){
-            ArrayList<String> friends = connection.displayNewestFriends(u1, graph);
-            System.out.println("-------------------------");
-            System.out.println("-1 - Sort friend list");
+        while(choice>0 || choice<0){
+            switch(choice){
+                case 1 -> friends = connection.displayNewestFriends(u1, graph);
+                case 2 -> friends = connection.displayOldestFriends(u1, graph);
+            }
+            if(friends.size()!=0)
+                System.out.println((friends.size()+1) + " - Sort friend list");
             System.out.println("0 - Back");
             System.out.println("*************************");
             choice = sc.nextInt();
             System.out.println("*************************");
-            while(choice<0){
+            if(choice>0 && choice<friends.size()){
+                User friend = database.getProfile(friends.get(choice-1));
+                viewOtherPage(friend);
+            }
+            while(choice==friends.size()+1 && choice!=0){
+                System.out.println("0 - Back");
                 System.out.println("1 - Newest friends first");
                 System.out.println("2 - Oldest friends first");
                 System.out.println("*************************");
-                int sortingChoice = sc.nextInt();
-                System.out.println("*************************");
-                switch(sortingChoice){
-                    case 1 -> friends = connection.displayNewestFriends(u1, graph);
-                    case 2 -> friends = connection.displayOldestFriends(u1, graph);
-                }
-                System.out.println("-------------------------");
-                System.out.println("-1 - Sort friend list");
-                System.out.println("0 - Back");
-                System.out.println("*************************");
                 choice = sc.nextInt();
                 System.out.println("*************************");
+                // Condition if input index out of bound
+                if(choice<0 || choice>2){
+                    choice = friends.size()+1;
+                    continue;
+                }
 
-            }
-            if(choice>0){
-                User friend = database.getProfile(friends.get(choice-1));
-                viewOtherPage(friend);
+                // Condition if choice(1/2) = friends.size(), break loop
+                if(choice==1 || choice==2)
+                    break;
             }
         }
     }
@@ -552,37 +583,47 @@ public class AccountManagement {
     public void displayRecommendedUsers(){
         ArrayList<User> recomUser = connection.recommendedUser(user, graph);
         for(int i=0; i<recomUser.size(); i++){
-            // Request from user
-            boolean statusRequest = connection.checkRequest(user, recomUser.get(i));
-            // Request to user
-            boolean pendingRequest = connection.checkRequest(recomUser.get(i), user);
-            System.out.println(recomUser.get(i).getName());
-            System.out.println("(" + connection.getTotalMutual(user, recomUser.get(i), graph) + " mutuals)");
-            System.out.println("0 - Next");
-            if(statusRequest)
-                System.out.println("1 - Cancel friend request");
-            else if(pendingRequest)
-                System.out.println("1 - Confirm request");
-            else
-                System.out.println("1 - Add friend");
-            if(i>0)
-                System.out.println("2 - Back");
-            System.out.println("-1 - Homepage");
-            System.out.println("*************************");
-            int choice = sc.nextInt();
-            System.out.println("*************************");
-            switch(choice){
-                case 0: continue;
-                case 1: if(statusRequest)
-                            connection.cancelRequest(user, recomUser.get(i));
-                        else if(pendingRequest){
-                            graph = connection.confirmRequest(recomUser.get(i), user, graph);
-                            connection.cancelRequest(recomUser.get(i), user);
-                        }else
-                            connection.sendRequest(user, recomUser.get(i));
-                        break;
-                case 2: i = i-2;
-                        break;
+            int choice = 3;
+            while(choice<-1 || choice>2){
+                // Request from user
+                boolean statusRequest = connection.checkRequest(user, recomUser.get(i));
+                // Request to user
+                boolean pendingRequest = connection.checkRequest(recomUser.get(i), user);
+                System.out.println(recomUser.get(i).getName());
+                System.out.println("(" + connection.getTotalMutual(user, recomUser.get(i), graph) + " mutuals)");
+                System.out.println("-------------------------");
+                if(i<recomUser.size()-1)
+                    System.out.println("0 - Next");
+                if(statusRequest)
+                    System.out.println("1 - Cancel friend request");
+                else if(pendingRequest)
+                    System.out.println("1 - Confirm request");
+                else
+                    System.out.println("1 - Add friend");
+                if(i>0)
+                    System.out.println("2 - Back");
+                System.out.println("-1 - Homepage");
+                System.out.println("*************************");
+                choice = sc.nextInt();
+                System.out.println("*************************");
+
+                // Condition if input index out of bound
+                if(choice==0 && i==recomUser.size()-1)
+                    choice = 3;
+                
+                switch(choice){
+                    case 0: continue;
+                    case 1: if(statusRequest)
+                                connection.cancelRequest(user, recomUser.get(i));
+                            else if(pendingRequest){
+                                graph = connection.confirmRequest(recomUser.get(i), user, graph);
+                                connection.cancelRequest(recomUser.get(i), user);
+                            }else
+                                connection.sendRequest(user, recomUser.get(i));
+                            break;
+                    case 2: i = i-2;
+                            break;
+                }
             }
             if(choice<0)
                 break;
@@ -604,23 +645,49 @@ public class AccountManagement {
         }
         while(choice>=0){
             for(int i=yourPosts.size()-1; i>=0; i--){
+                ArrayList<String> likeList = database.getPostList(yourPosts.get(i), "likeList");
+                postManager.viewPost(yourPosts.get(i));
                 System.out.println("0 - Next");
-                System.out.println("1 - Like");
+                boolean likeStatus = false;
+                for(String x : likeList){
+                    if(x.equals(user.getUsername())){
+                        System.out.println("1 - Unlike");
+                        likeStatus = true;
+                        break;
+                    }
+                }
+                if(!likeStatus)
+                    System.out.println("1 - Like");
                 System.out.println("2 - View likes");
                 System.out.println("3 - Comment");
                 System.out.println("4 - View comments");
-                if(i>0)
+                if(i<yourPosts.size()-1)
                     System.out.println("5 - Back");
                 System.out.println("-1 - Back to posts tab");
                 System.out.println("*************************");
                 choice = sc.nextInt();
+                int choicePost = choice;
                 System.out.println("*************************");
-                switch(choice){
-                    case 1 -> postManager.likePost(yourPosts.get(i), u1);
-                    case 2 -> postManager.viewLikes(yourPosts.get(i));
-                    case 3 -> postManager.commentPost(yourPosts.get(i), u1);
-                    case 4 -> postManager.viewComments(yourPosts.get(i));
-                    case 5 -> i = i-2;
+                while(choicePost>0){
+                    switch(choice){
+                        case 1: if(likeStatus)
+                                    postManager.unlikePost(yourPosts.get(i), user);
+                                else
+                                    postManager.likePost(yourPosts.get(i), user);
+                                break;
+                        case 2: postManager.viewLikes(yourPosts.get(i));
+                                break;
+                        case 3: postManager.commentPost(yourPosts.get(i), user);
+                                break;
+                        case 4: postManager.viewComments(yourPosts.get(i));
+                                break;
+                        case 5: i = i-2;
+                                break;
+                    }
+                    System.out.println("0 - Back");
+                    System.out.println("*************************");
+                    choicePost = sc.nextInt();
+                    System.out.println("*************************");
                 }
                 if(choice<0)
                     break;

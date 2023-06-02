@@ -198,7 +198,7 @@ public class UsersConnection {
     }
 
     public ConnectionGraph<String> removeFriend(User sender, User receiver, ConnectionGraph<String> graph){
-        graph = graph.removeUndirectedEdge(graph, user.getUsername(), receiver.getUsername());
+        graph = graph.removeUndirectedEdge(graph, sender.getUsername(), receiver.getUsername());
 
         // Decrement number of friends
         sender.setNoOfFriends(sender.getNoOfFriends()-1);
@@ -216,10 +216,12 @@ public class UsersConnection {
         ArrayList<String> friends = graph.getNeighbours(graph, user.getUsername());
         Collections.reverse(friends);
         System.out.println("<" + friends.size() + " friends>");
+        System.out.println("-------------------------");
         for(int i=1; i<=friends.size(); i++){
             User u = database.getProfile(friends.get(i-1));
             System.out.println(i + " - " + u.getName());
             System.out.println("(" + getTotalMutual(user, u, graph) + " mutuals)");
+            System.out.println("-------------------------");
         }
         return friends;
     }
@@ -228,10 +230,12 @@ public class UsersConnection {
     public ArrayList<String> displayOldestFriends(User user, ConnectionGraph<String> graph){
         ArrayList<String> friends = graph.getNeighbours(graph, user.getUsername());
         System.out.println("<" + friends.size() + " friends>");
+        System.out.println("-------------------------");
         for(int i=1; i<=friends.size(); i++){
             User u = database.getProfile(friends.get(i-1));
             System.out.println(i + " - " + u.getName());
             System.out.println("(" + getTotalMutual(user, u, graph) + " mutuals)");
+            System.out.println("-------------------------");
         }
         return friends;
     }

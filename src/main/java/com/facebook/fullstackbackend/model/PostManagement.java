@@ -23,8 +23,8 @@ public class PostManagement {
         System.out.println("*************************");
         String content = sc.nextLine();
         while(!content.contains("/end")){
-            strBuilder.append(content + "\n");
-            content = sc.nextLine();
+            strBuilder.append(content);
+            content = "\n" + sc.nextLine();
         }
         postBuilder.setContent(strBuilder.toString());
         System.out.println("*************************");
@@ -44,6 +44,7 @@ public class PostManagement {
         System.out.println("1 - Post draft");
         System.out.println("*************************");
         choice = sc.nextInt();
+        System.out.println("*************************");
         if(choice==1){
             database.uploadPost(post); 
         }
@@ -65,6 +66,15 @@ public class PostManagement {
         databaseInt.updatePost(post, "likes", post.getLikes());
         return post;
     }
+    public Post unlikePost(Post post, User user){
+        post.setLikes(post.getLikes()-1);
+        ArrayList<String> likeList = database.getPostList(post, "likeList");
+        likeList.remove(user.getUsername());
+        database.updatePostList(post, "likeList", likeList);
+        DatabaseSql<Integer> databaseInt = new DatabaseSql<>();
+        databaseInt.updatePost(post, "likes", post.getLikes());
+        return post;
+    }
 
     public Post commentPost(Post post, User user){
         StringBuilder strBuilder = new StringBuilder();
@@ -73,8 +83,8 @@ public class PostManagement {
         System.out.println("*************************");
         String content = sc.nextLine();
         while(!content.contains("/end")){
-            strBuilder.append(content + "\n");
-            content = sc.nextLine();
+            strBuilder.append(content);
+            content = "\n" + sc.nextLine();
         }
         String comment = strBuilder.toString();
         System.out.println("0 - Back");
@@ -94,11 +104,10 @@ public class PostManagement {
 
     public void viewPost(Post post){
         User user = database.getProfile(post.getUserID());
-        System.out.println("*************************");
         System.out.println("\u001B[1m" + user.getName() + "\u001B[0m");     // Bold text
         System.out.println(post.getContent());
         System.out.println("-------------------------");
-        System.out.println(post.getLikes() + " likes\t" + post.getComments() + " comments");
+        System.out.println(post.getLikes() + " likes\t\t" + post.getComments() + " comments");
         System.out.println("*************************");
     }
 
@@ -115,12 +124,12 @@ public class PostManagement {
     public void viewComments(Post post){
         ArrayList<String> commentList = database.getPostList(post, "commentList");
         System.out.println("<" + post.getComments() + " comments>");
-        System.out.println("-------------------------");
         for(String x : commentList){
+            System.out.println("-------------------------");
             String[] commentInfo = x.split(":");
             System.out.println(database.getProfile(commentInfo[0]).getName() + ":");
             System.out.println(commentInfo[1]);
-            System.out.println();
+            System.out.println("-------------------------");
         }
         System.out.println("*************************");
     }
