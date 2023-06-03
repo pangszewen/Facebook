@@ -17,25 +17,31 @@ public class ConnectionGraph<T extends Comparable<String>> {
         Connection conn = null;
         PreparedStatement pstmt = null;
         try {
-            Class.forName("com.mysql.cj.jdbc.Driver");
             conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/database", "root", "");
-            Statement statement = conn.createStatement();
-            ResultSet resultSet = statement.executeQuery("SELECT * FROM graph");
+            pstmt = conn.prepareStatement("SELECT * FROM graph");
+            ResultSet resultSet =pstmt.executeQuery();
     
+            // Add each vertex to graph
+            while (resultSet.next()) {
+                String vertex = resultSet.getString("user");
+                graph.addVertex(graph, vertex);
+            }
+            pstmt.close();
+            conn.close();
+
+            // After adding vertex, only add edges for each vertex
+            conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/database", "root", "");
+            pstmt = conn.prepareStatement("SELECT * FROM graph");
+            resultSet =pstmt.executeQuery();
             while (resultSet.next()) {
                 String vertex = resultSet.getString("user");
                 String edges = resultSet.getString("friends");
     
-                if (edges != null) {
-                    graph.addVertex(graph, vertex);
-    
+                if (edges != null) {    
                     String[] edgeData = edges.split(",");
-                    for (String edge : edgeData) {
-                        graph.addEdge(graph, vertex, edge);
-                        graph.addEdge(graph, edge, vertex);
+                    for (int i=edgeData.length-1; i>=0; i--) {
+                        graph.addEdge(graph, vertex, edgeData[i]);
                     }
-                } else {
-                    graph.addVertex(graph, vertex);
                 }
             }
 
@@ -209,7 +215,6 @@ public class ConnectionGraph<T extends Comparable<String>> {
                         sourceVertex.firstEdge = newEdge;
                         sourceVertex.outdeg++;
                         destinationVertex.indeg++;
-                        updateFriend(graph, source, destination);
                         return graph;
                     }
                     destinationVertex = destinationVertex.nextVertex;
@@ -222,7 +227,9 @@ public class ConnectionGraph<T extends Comparable<String>> {
     }
     public ConnectionGraph<String> addUndirectedEdge(ConnectionGraph<String> graph, String v1, String v2) {
         ConnectionGraph<String> temp = graph.addEdge(graph, v1, v2);
+        updateFriend(graph, v1, v2);
         temp = temp.addEdge(temp, v2, v1);
+        updateFriend(graph, v2, v1);
         return temp;
     }
 

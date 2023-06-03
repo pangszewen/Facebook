@@ -23,7 +23,8 @@ public class User {
     private ArrayList<String> hobbies;
     private Stack<String> jobs;
     private Stack<String> requestList;
-    private int noOfPost;
+    private int noOfCreatedPost;
+    private int noOfDeletedPost;
     enum Gender{
         MALE,
         FEMALE
@@ -46,7 +47,8 @@ public class User {
         this.hobbies = builder.hobbies;
         this.jobs = builder.jobs;
         this.requestList = builder.requestList;
-        this.noOfPost = builder.noOfPost;
+        this.noOfCreatedPost = builder.noOfCreatedPost;
+        this.noOfDeletedPost = builder.noOfDeletedPost;
     }
 
     public void setAccountID(){
@@ -173,11 +175,18 @@ public class User {
         return requestList;
     }
 
-    public void setNoOfPost(int noOfPost){
-        this.noOfPost = noOfPost;
+    public void setNoOfCreatedPost(int noOfCreatedPost){
+        this.noOfCreatedPost = noOfCreatedPost;
     }
-    public int getNoOfPost(){
-        return noOfPost;
+    public int getNoOfCreatedPost(){
+        return noOfCreatedPost;
+    }
+
+    public void setNoOfDeletedPost(int noOfDeletedPost){
+        this.noOfDeletedPost = noOfDeletedPost;
+    }
+    public int getNoOfDeletedPost(){
+        return noOfDeletedPost;
     }
 
 }

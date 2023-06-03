@@ -7,6 +7,7 @@ public class PostBuilder {
     public String content;
     public int likes;
     public int comments;
+    public String postTime;
 
     
     public PostBuilder(){
@@ -18,7 +19,7 @@ public class PostBuilder {
     }
 
     public PostBuilder(User user){
-        this.postID = user.getAccountID() + String.valueOf(user.getNoOfPost());
+        this.postID = user.getAccountID() + String.valueOf(user.getNoOfCreatedPost());
         this.userID = user.getAccountID();
         this.status = Post.Status.PUBLIC;
         this.likes = 0;
@@ -68,6 +69,13 @@ public class PostBuilder {
     }
     public int getComments(){
         return comments;
+    }
+
+    public void setPostTime(String postTime){
+        this.postTime = postTime;
+    }
+    public String getPostTime(){
+        return this.postTime;
     }
 
     public Post build(){

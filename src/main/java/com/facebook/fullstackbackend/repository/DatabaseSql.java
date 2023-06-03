@@ -116,7 +116,7 @@ public class DatabaseSql<T> {
             conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/database", "root", "");
 
             // Insert data into userprofile table
-            pstmt = conn.prepareStatement("INSERT INTO userprofile (accountID, username, email, phoneNo, role, name, birthday, age, address, gender, status, noOfFriends, hobbies, jobs, requestList, noOfPost) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+            pstmt = conn.prepareStatement("INSERT INTO userprofile (accountID, username, email, phoneNo, role, name, birthday, age, address, gender, status, noOfFriends, hobbies, jobs, requestList, noOfCreatedPost, noOfDeletedPost) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
             pstmt.setString(1, user.getAccountID());
             pstmt.setString(2, user.getUsername());
             pstmt.setString(3, user.getEmail());
@@ -132,8 +132,8 @@ public class DatabaseSql<T> {
             pstmt.setString(13, String.join(",", user.getHobbies()));
             pstmt.setString(14, String.join(",", user.getJobs()));
             pstmt.setString(15, String.join(",", user.getRequestList()));
-            pstmt.setInt(16, user.getNoOfPost());
-    
+            pstmt.setInt(16, user.getNoOfCreatedPost());
+            pstmt.setInt(17, user.getNoOfDeletedPost());
             pstmt.executeUpdate();
         } catch (Exception e) {
             e.printStackTrace();
@@ -345,7 +345,8 @@ public class DatabaseSql<T> {
                 requestListStack.addAll(reqeustList);
                 builder.setRequestList(requestListStack);
 
-                builder.setNoOfPost(rs.getInt("noOfPost"));
+                builder.setNoOfCreatedPost(rs.getInt("noOfCreatedPost"));
+                builder.setNoOfDeletedPost(rs.getInt("noOfDeletedPost"));
 
                 rs.close();
                 pstmt.close();
@@ -554,6 +555,7 @@ public class DatabaseSql<T> {
                 postBuilder.setContent(rs.getString("content"));
                 postBuilder.setLikes(rs.getInt("likes"));
                 postBuilder.setComments(rs.getInt("comments"));
+                postBuilder.setPostTime(rs.getString("postTime"));
             }
 
             return postBuilder.build();
@@ -588,6 +590,7 @@ public class DatabaseSql<T> {
                 postBuilder.setContent(rs.getString("content"));
                 postBuilder.setLikes(rs.getInt("likes"));
                 postBuilder.setComments(rs.getInt("comments"));
+                postBuilder.setPostTime(rs.getString("postTime"));
                 userPosts.add(postBuilder.build());
             }
 
@@ -861,5 +864,14 @@ public class DatabaseSql<T> {
             e.printStackTrace();
         }
         return temp;
+    }
+
+    public boolean confirmPassword(String p1, String p2){
+        if(p1.equals(p2))
+            return true;
+        else{
+            System.out.println("Password is not matched. Please try again.");
+            return false;
+        }
     }
 }

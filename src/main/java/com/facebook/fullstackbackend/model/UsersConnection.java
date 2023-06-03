@@ -76,8 +76,8 @@ public class UsersConnection {
                 case 7 -> user = builder.editHobbies(user);
                 case 8 -> user = builder.editJobs(user);
             }
+            System.out.println("*************************");
         }
-        System.out.println("*************************");
         return user;
     }
 
@@ -212,14 +212,19 @@ public class UsersConnection {
     }
 
     // Display newest friends at top (ArrayList-loop from head of ArrayList)
-    public ArrayList<String> displayNewestFriends(User user, ConnectionGraph<String> graph){
-        ArrayList<String> friends = graph.getNeighbours(graph, user.getUsername());
-        Collections.reverse(friends);
+    public ArrayList<String> displayNewestFriends(User user, User u1, ConnectionGraph<String> graph){
+        ArrayList<String> friends = graph.getNeighbours(graph, u1.getUsername());
         System.out.println("<" + friends.size() + " friends>");
         System.out.println("-------------------------");
         for(int i=1; i<=friends.size(); i++){
             User u = database.getProfile(friends.get(i-1));
-            System.out.println(i + " - " + u.getName());
+            String title = "New";
+            if(u.getUsername().equals(user.getUsername()))
+                title = "You";
+            else if(graph.hasEdge(graph, user.getUsername(), u.getUsername()))
+                title = "Friend";
+            System.out.println(i + " - " + u.getName() + " \"" + title + "\"");
+            if(!u.getUsername().equals(user.getUsername()))
             System.out.println("(" + getTotalMutual(user, u, graph) + " mutuals)");
             System.out.println("-------------------------");
         }
@@ -227,14 +232,21 @@ public class UsersConnection {
     }
 
     // Display oldest friends at top (ArrayList-loop from tail of ArrayList)
-    public ArrayList<String> displayOldestFriends(User user, ConnectionGraph<String> graph){
-        ArrayList<String> friends = graph.getNeighbours(graph, user.getUsername());
+    public ArrayList<String> displayOldestFriends(User user, User u1, ConnectionGraph<String> graph){
+        ArrayList<String> friends = graph.getNeighbours(graph, u1.getUsername());
+        Collections.reverse(friends);
         System.out.println("<" + friends.size() + " friends>");
         System.out.println("-------------------------");
         for(int i=1; i<=friends.size(); i++){
             User u = database.getProfile(friends.get(i-1));
-            System.out.println(i + " - " + u.getName());
-            System.out.println("(" + getTotalMutual(user, u, graph) + " mutuals)");
+            String title = "New";
+            if(u.getUsername().equals(user.getUsername()))
+                title = "You";
+            else if(graph.hasEdge(graph, user.getUsername(), u.getUsername()))
+                title = "Friend";
+            System.out.println(i + " - " + u.getName() + " \"" + title + "\"");
+            if(!u.getUsername().equals(user.getUsername()))
+                System.out.println("(" + getTotalMutual(user, u, graph) + " mutuals)");
             System.out.println("-------------------------");
         }
         return friends;

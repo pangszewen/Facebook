@@ -30,7 +30,8 @@ public class UserBuilder {
     public ArrayList<String> hobbies = new ArrayList<>();
     public Stack<String> jobs = new Stack<>();
     public Stack<String> requestList = new Stack<>();
-    public int noOfPost;
+    public int noOfCreatedPost;
+    public int noOfDeletedPost;
     
     public UserBuilder(){
         this.accountID = null;
@@ -39,7 +40,8 @@ public class UserBuilder {
         this.phoneNo = null;
         this.password = null;
         this.role = "normal";
-        this.noOfPost = 0;
+        this.noOfCreatedPost = 0;
+        this.noOfDeletedPost = 0;
     }
 
     public UserBuilder(String accountID, String username, String email, String phoneNo, String password, String role){
@@ -49,7 +51,8 @@ public class UserBuilder {
         this.phoneNo = phoneNo;
         this.password = password;
         this.role = "normal";
-        this.noOfPost = 0;
+        this.noOfCreatedPost = 0;
+        this.noOfDeletedPost = 0;
     }
 
     public void setAccountID(){
@@ -183,11 +186,18 @@ public class UserBuilder {
         return requestList;
     }
 
-    public void setNoOfPost(int noOfPost){
-        this.noOfPost = noOfPost;
+    public void setNoOfCreatedPost(int noOfCreatedPost){
+        this.noOfCreatedPost = noOfCreatedPost;
     }
-    public int getNoOfPost(){
-        return noOfPost;
+    public int getNoOfCreatedPost(){
+        return noOfCreatedPost;
+    }
+
+    public void setNoOfDeletedPost(int noOfDeletedPost){
+        this.noOfDeletedPost = noOfDeletedPost;
+    }
+    public int getNoOfDeletedPost(){
+        return noOfDeletedPost;
     }
 
     // to create User object

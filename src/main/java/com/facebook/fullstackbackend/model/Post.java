@@ -7,6 +7,7 @@ public class Post {
     private String content;
     private int likes;
     private int comments;
+    private String postTime;
     enum Status{
         PUBLIC,
         PRIVATE
@@ -19,6 +20,7 @@ public class Post {
         this.content = builder.content;
         this.likes = builder.likes;
         this.comments = builder.comments;
+        this.postTime = builder.postTime;
     }
 
     public void setPostID(String postID){
@@ -61,5 +63,12 @@ public class Post {
     }
     public int getComments(){
         return comments;
+    }
+
+    public void setPostTime(String postTime){
+        this.postTime = postTime;
+    }
+    public String getPostTime(){
+        return this.postTime;
     }
 }
