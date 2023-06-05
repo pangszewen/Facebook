@@ -126,6 +126,70 @@ public class PostManagement {
         System.out.println("*************************");
     }
 
+    public LinkedList<String> displayPostAction(User user, Post post, LinkedList<String> history){
+        int choice = 5;
+        while(choice!=-1){
+            ArrayList<String> likeList = database.getPostList(post, "likeList");
+            viewPost(post);
+                        
+            boolean likeStatus = false;
+            for(String x : likeList){
+                if(x.equals(user.getUsername())){
+                    System.out.println("1 - Unlike");
+                    likeStatus = true;
+                    break;
+                }
+            }
+            if(!likeStatus)
+                System.out.println("1 - Like");
+            System.out.println("2 - View likes");
+            System.out.println("3 - Comment");
+            System.out.println("4 - View comments");
+            if(user.getAccountID().equals(post.getUserID()))
+                System.out.println("5 - Delete post");
+            System.out.println("-1 - Back to history page");
+            System.out.println("*************************");
+            choice = sc.nextInt();
+            sc.nextLine();
+            System.out.println("*************************");
+            if(choice>0){
+                switch(choice){
+                    case 1: if(likeStatus)
+                                unlikePost(post, user);
+                            else
+                                likePost(post, user);
+                            break;
+                    case 2: viewLikes(post);
+                            break;
+                    case 3: commentPost(post, user);
+                            break;
+                    case 4: viewComments(post);
+                            break;
+                    case 5: if(user.getAccountID().equals(post.getUserID())){
+                                deletePost(post, user);
+                                history = history.remove(post.getPostID(), history);
+                            }   
+                            break;
+                }
+                if(choice==2 || choice==4){
+                    System.out.println("0 - Back");
+                    System.out.println("-1 - Back to history page");
+                    System.out.println("*************************");
+                    choice = sc.nextInt();
+                    sc.nextLine();
+                    System.out.println("*************************");
+                }else if(choice==5){
+                    if(user.getAccountID().equals(post.getUserID())){
+                        System.out.println("Post successfully deleted");
+                        System.out.println("*************************");
+                        choice = -1;    // Break loop
+                    }
+                }
+            }
+        } 
+        return history;       
+    }
+
     public void viewLikes(Post post){
         ArrayList<String> likeList = database.getPostList(post, "likeList");    // List of usernames of users who like the post
         System.out.println("<" + post.getLikes() + " likes>");
@@ -133,7 +197,8 @@ public class PostManagement {
         for(String x : likeList){
             System.out.println(database.getProfile(x).getName());   // Display the name of user account, not username
         }
-        System.out.println("-------------------------");
+        if(post.getLikes()!=0)
+            System.out.println("-------------------------");
     }   
 
     public void viewComments(Post post){

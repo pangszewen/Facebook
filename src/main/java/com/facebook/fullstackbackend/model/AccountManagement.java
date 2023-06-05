@@ -3,6 +3,7 @@ package com.facebook.fullstackbackend.model;
 import java.time.LocalDate;
 import java.time.Period;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.InputMismatchException;
 import java.util.Scanner;
 
@@ -12,12 +13,11 @@ public class AccountManagement {
     Scanner sc = new Scanner(System.in);
     UserBuilder builder = new UserBuilder();
     User user;
-    ConnectionGraph <String> graph = new ConnectionGraph<>();
+    ConnectionGraph <String> graph;
     UsersConnection connection = new UsersConnection();
     DatabaseSql<String> database = new DatabaseSql<>();
     PostManagement postManager = new PostManagement();
-
-    public AccountManagement(){}
+    LinkedList<String> history;
 
     public void registration(){
         System.out.println("\tRegistration Form");
@@ -82,6 +82,8 @@ public class AccountManagement {
     }
 
     public User login(){
+        graph = new ConnectionGraph<>();
+        history = new LinkedList<>();
         System.out.println("\tLogin Page");
         System.out.println("-------------------------");
         System.out.print("Email address or phone number: ");
@@ -185,7 +187,7 @@ public class AccountManagement {
         try{
             int choice = 1;
             while(choice>0){
-                System.out.println( "\t" + "\u001B[1m" + user.getName() + "\u001B[0m");
+                System.out.println( "\u001B[1m" + user.getName() + "\u001B[0m");
                 System.out.println("-------------------------");
                 System.out.println("0 - Back");
                 System.out.println("1 - Posts");
@@ -266,7 +268,7 @@ public class AccountManagement {
                 // TRUE when already requested, FALSE when not yet request
                 boolean statusRequest = connection.checkRequest(user, u1);
 
-                System.out.println("\t" + "\u001B[1m" + u1.getName() + "\u001B[0m");
+                System.out.println("\u001B[1m" + u1.getName() + "\u001B[0m");
                 if(isFriend)
                     System.out.println("\"Friend\"");
                 System.out.println("-------------------------");
@@ -335,9 +337,10 @@ public class AccountManagement {
 
                     case 4: if(isFriend&&!statusRequest)        // user remove friend
                                 connection.removeFriend(user, u1, graph);
-                            else if(isFriend&&statusRequest)    // user confirm friend request
+                            else if(isFriend&&statusRequest){    // user confirm friend request
+                                connection.confirmRequest(user, u1, graph);
                                 connection.cancelRequest(user, u1);
-                            else if(!isFriend&&!statusRequest)  // user send friend request
+                            }else if(!isFriend&&!statusRequest)  // user send friend request
                                 connection.sendRequest(user, u1);
                             else                                // user cancel friend request sent to searched user
                                 connection.cancelRequest(user, u1);
@@ -718,7 +721,8 @@ public class AccountManagement {
 
     public void displayPosts(User u1){
         try{
-            ArrayList<Post> yourPosts = database.getUserPosts(u1);
+            ArrayList<Post> yourPosts = database.getUserPosts(user, u1, graph);
+            Collections.reverse(yourPosts);
             System.out.println("<" + yourPosts.size() + " posts>");
             System.out.println("-------------------------");
             int choice = 1;
@@ -737,8 +741,9 @@ public class AccountManagement {
             }
             
             while(choice>=0){
-                for(int i=yourPosts.size()-1; i>=0; i--){
-                    yourPosts = database.getUserPosts(u1);
+                for(int i=0; i<yourPosts.size(); i++){
+                    yourPosts = database.getUserPosts(user, u1, graph);
+                    Collections.reverse(yourPosts);
                     if(yourPosts.size()==0){
                         System.out.println("No posts yet");
                         if(u1.getUsername().equals(user.getUsername()))
@@ -753,7 +758,15 @@ public class AccountManagement {
                     }
                     ArrayList<String> likeList = database.getPostList(yourPosts.get(i), "likeList");
                     postManager.viewPost(yourPosts.get(i));
-                    if(i!=0)
+                    
+                    // Keep track of user viewed post
+                    if(history.contains(yourPosts.get(i).getPostID())){
+                        history = history.remove(yourPosts.get(i).getPostID(), history);
+                        history.addFirst(yourPosts.get(i).getPostID());
+                    }else
+                        history.addFirst(yourPosts.get(i).getPostID());
+
+                    if(i<yourPosts.size()-1)
                         System.out.println("0 - Next");
                     else
                         System.out.println("0 - Refresh");
@@ -770,14 +783,13 @@ public class AccountManagement {
                     System.out.println("2 - View likes");
                     System.out.println("3 - Comment");
                     System.out.println("4 - View comments");
-                    if(i<yourPosts.size()-1)
+                    if(i!=0)
                         System.out.println("5 - Back");
-                    if(user.getUsername()==u1.getUsername())
+                    if(user.getUsername().equals(u1.getUsername())){
                         System.out.println("6 - Delete post");
-                    // Check if user is viewing his own page or other users page
-                    if(u1.getUsername().equals(user.getUsername()))
+                        // Check if user is viewing his own page or other users page
                         System.out.println("-1 - Back to posts tab");
-                    else
+                    }else
                         System.out.println("-1 - Back to main page");
                     System.out.println("*************************");
                     choice = sc.nextInt();
@@ -798,7 +810,10 @@ public class AccountManagement {
                                     break;
                             case 5: i = i+2;
                                     break;
-                            case 6: postManager.deletePost(yourPosts.get(i), user);
+                            case 6: if(user.getUsername().equals(u1.getUsername())){
+                                        postManager.deletePost(yourPosts.get(i), user);
+                                        history = history.remove(yourPosts.get(i).getPostID(), history);
+                                    }
                                     break;
                         }
                         if(choice==2 || choice==4){
@@ -825,4 +840,28 @@ public class AccountManagement {
             displayPosts(u1);
         }
     }
+
+    public void displayHistory(){
+        try{
+            System.out.println("\tHistory");
+            System.out.println("-------------------------");
+            int choice = 1;
+            if(history.getSize()==0){
+                while(choice!=-1){
+                    System.out.println("No history yet");
+                    System.out.println("-1 - Back to main page");
+                    System.out.println("*************************");
+                    choice = sc.nextInt();
+                    sc.nextLine();
+                    System.out.println("*************************");
+                }
+            }else{
+                history = history.iterateForward(user, history, graph);
+            }  
+        }catch(InputMismatchException e){
+            System.out.println("*************************");
+            displayHistory();;
+        }
+    }
+
 }

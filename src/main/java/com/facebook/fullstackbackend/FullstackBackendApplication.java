@@ -57,6 +57,7 @@ public class FullstackBackendApplication {
                                                 System.out.println("2 - Search Facebook");
                                                 System.out.println("3 - Your friends");
                                                 System.out.println("4 - Suggestions");
+                                                System.out.println("5 - History");
                                                 System.out.println("*************************");
                                                 choice1 = sc.nextInt();
                                                 sc.nextLine();
@@ -66,6 +67,7 @@ public class FullstackBackendApplication {
                                                         case 2 -> manager.searchUsers();
                                                         case 3 -> manager.displayFriends();
                                                         case 4 -> manager.displayRecommendedUsers();
+                                                        case 5 -> manager.displayHistory();
                                                 }
                                         }
                                 }

@@ -1,5 +1,6 @@
 package com.facebook.fullstackbackend.repository;
 
+import com.facebook.fullstackbackend.model.ConnectionGraph;
 import com.facebook.fullstackbackend.model.Post;
 import com.facebook.fullstackbackend.model.PostBuilder;
 import com.facebook.fullstackbackend.model.User;
@@ -13,8 +14,6 @@ import java.util.regex.*;
 
 public class DatabaseSql<T> {
     Random rand = new Random();
-
-    public DatabaseSql(){}
 
     public void registerUser(User user){
         Connection conn = null;
@@ -484,7 +483,7 @@ public class DatabaseSql<T> {
             pstmt = conn.prepareStatement("INSERT INTO post (postID, userID, status, content, likes, comments, likeList, commentList) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
             pstmt.setString(1, post.getPostID());
             pstmt.setString(2, post.getUserID());
-            pstmt.setString(3, String.valueOf(post.geStatus()));
+            pstmt.setString(3, String.valueOf(post.getStatus()));
             pstmt.setString(4, post.getContent());
             pstmt.setInt(5, post.getLikes());
             pstmt.setInt(6, post.getComments());
@@ -569,7 +568,7 @@ public class DatabaseSql<T> {
         return null;
     }
 
-    public ArrayList<Post> getUserPosts(User user){
+    public ArrayList<Post> getUserPosts(User user, User u1, ConnectionGraph<String> graph){
         ArrayList<Post> userPosts = new ArrayList<>();
         Connection conn = null;
         PreparedStatement pstmt = null;
@@ -579,7 +578,7 @@ public class DatabaseSql<T> {
 
             // Read from useraccount table
             pstmt = conn.prepareStatement("SELECT * FROM post WHERE userID = ?");
-            pstmt.setString(1, user.getAccountID());
+            pstmt.setString(1, u1.getAccountID());
             ResultSet rs = pstmt.executeQuery();
 
             while(rs.next()) {
@@ -591,7 +590,13 @@ public class DatabaseSql<T> {
                 postBuilder.setLikes(rs.getInt("likes"));
                 postBuilder.setComments(rs.getInt("comments"));
                 postBuilder.setPostTime(rs.getString("postTime"));
-                userPosts.add(postBuilder.build());
+                Post post = postBuilder.build();
+                if(rs.getString("status").equals("PRIVATE")){
+                    // Only yourself and your friends can view your private posts
+                    if(privacy(user, u1, graph) || user.getUsername().equals(u1.getUsername()))
+                        userPosts.add(post);
+                }else
+                    userPosts.add(post);     // Public posts
             }
 
             return userPosts;
@@ -864,6 +869,35 @@ public class DatabaseSql<T> {
             e.printStackTrace();
         }
         return temp;
+    }
+
+    public boolean privacy(User user, User u1, ConnectionGraph<String> graph){
+        if(graph.hasEdge(graph, user.getUsername(), u1.getUsername()))
+            return true;
+        else 
+            return false;
+    }
+
+    public boolean verifyPostExist(Post post){
+        Connection conn = null;
+        PreparedStatement pstmt = null;
+        try {
+            // Establish connection
+            conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/database", "root", "");
+
+            // Read from userprofile table
+            pstmt = conn.prepareStatement("SELECT * FROM post WHERE postID = ?");
+            pstmt.setString(1, post.getPostID());
+            ResultSet rs = pstmt.executeQuery();
+
+            return rs.next();
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+        return false;
     }
 
     public boolean confirmPassword(String p1, String p2){

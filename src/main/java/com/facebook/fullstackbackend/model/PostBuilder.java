@@ -46,7 +46,7 @@ public class PostBuilder {
     public void setStatus(String status){
         this.status = Post.Status.valueOf(status);
     }
-    public Post.Status geStatus(){
+    public Post.Status getStatus(){
         return status;
     }
 

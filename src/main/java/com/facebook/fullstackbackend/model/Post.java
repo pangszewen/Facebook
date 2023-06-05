@@ -40,7 +40,7 @@ public class Post {
     public void setStatus(Status status){
         this.status = status;
     }
-    public Status geStatus(){
+    public Status getStatus(){
         return status;
     }
 

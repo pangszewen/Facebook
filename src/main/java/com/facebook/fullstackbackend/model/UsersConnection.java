@@ -13,8 +13,6 @@ public class UsersConnection {
     UserBuilder builder = new UserBuilder();
     ConnectionGraph<String> graph = new ConnectionGraph<>();
 
-    public UsersConnection(){}
-
     // Add new user as vertex to graph
     public ConnectionGraph<String> registerGraph(ConnectionGraph<String> graph, String username){
         return graph.registerVertex(graph, username);

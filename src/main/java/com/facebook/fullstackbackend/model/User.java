@@ -188,5 +188,4 @@ public class User {
     public int getNoOfDeletedPost(){
         return noOfDeletedPost;
     }
-
 }
