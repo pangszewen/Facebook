@@ -111,6 +111,7 @@ public class UsersConnection {
         for(int i=0; i<v.size(); i++){
             // Users yet to setup account is not included
             if(database.isSetup(v.get(i))){
+
                 // User himself and his friends are not included in recommendation list
                 if(!v.get(i).equals(u1.getUsername()) && !graph.hasEdge(graph, u1.getUsername(), v.get(i))){
                     User u2 = database.getProfile(v.get(i));

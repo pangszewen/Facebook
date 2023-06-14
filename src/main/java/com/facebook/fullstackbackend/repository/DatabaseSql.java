@@ -115,7 +115,7 @@ public class DatabaseSql<T> {
             conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/database", "root", "");
 
             // Insert data into userprofile table
-            pstmt = conn.prepareStatement("INSERT INTO userprofile (accountID, username, email, phoneNo, role, name, birthday, age, address, gender, status, noOfFriends, hobbies, jobs, requestList, noOfCreatedPost, noOfDeletedPost) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+            pstmt = conn.prepareStatement("INSERT INTO userprofile (accountID, username, email, phoneNo, role, name, birthday, age, address, gender, status, noOfFriends, hobbies, jobs, requestList, noOfCreatedPost, noOfDeletedPost, banDuration, banStartDate) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
             pstmt.setString(1, user.getAccountID());
             pstmt.setString(2, user.getUsername());
             pstmt.setString(3, user.getEmail());
@@ -133,6 +133,8 @@ public class DatabaseSql<T> {
             pstmt.setString(15, String.join(",", user.getRequestList()));
             pstmt.setInt(16, user.getNoOfCreatedPost());
             pstmt.setInt(17, user.getNoOfDeletedPost());
+            pstmt.setString(18, String.valueOf(user.getBanDuration()));
+            pstmt.setString(19, user.getBanStartDate());
             pstmt.executeUpdate();
         } catch (Exception e) {
             e.printStackTrace();
@@ -166,7 +168,7 @@ public class DatabaseSql<T> {
             // Delete from userprofile table
             pstmtUserProfile = conn.prepareStatement("DELETE FROM userprofile WHERE accountID = ?");
             pstmtUserProfile.setString(1, user.getAccountID());
-            pstmtUserAccount.executeUpdate();
+            pstmtUserProfile.executeUpdate();
             
         } catch (Exception e) {
             e.printStackTrace();
@@ -346,6 +348,8 @@ public class DatabaseSql<T> {
 
                 builder.setNoOfCreatedPost(rs.getInt("noOfCreatedPost"));
                 builder.setNoOfDeletedPost(rs.getInt("noOfDeletedPost"));
+                builder.setBanDuration(rs.getString("banDuration"));
+                builder.setBanStartDate(rs.getString("banStartDate"));
 
                 rs.close();
                 pstmt.close();
@@ -358,7 +362,6 @@ public class DatabaseSql<T> {
         } catch (Exception ex) {
             ex.printStackTrace();
         }
-        System.out.println("Failed to get user.");
         return null;
     }
 
@@ -898,6 +901,64 @@ public class DatabaseSql<T> {
             ex.printStackTrace();
         }
         return false;
+    }
+
+    //Prohibited words list
+    public boolean containsOffensiveLanguage(String content) {
+        Connection conn = null;
+        PreparedStatement pstmt = null;
+        try {
+            conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/database", "root", "");
+
+            pstmt = conn.prepareStatement("SELECT * FROM prohibitedwords");
+            ResultSet rs = pstmt.executeQuery();
+
+            while (rs.next()) {
+                String word = rs.getString("words");
+                if (content.toLowerCase().contains(word.toLowerCase())) {
+                    return true;
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally {
+            try {
+                if (pstmt != null) {
+                    pstmt.close();
+                }
+                if (conn != null) {
+                    conn.close();
+                }
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        }
+        return false;
+    }
+
+    public void addNewProhibitedWord(String newProhibitedWord) {
+        Connection conn = null;
+        PreparedStatement pstmt = null;
+        try {
+            conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/database", "root", "");
+
+            pstmt = conn.prepareStatement("INSERT INTO prohibitedwords(words) VALUES (?)");
+            pstmt.setString(1, newProhibitedWord);
+            pstmt.executeUpdate();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally {
+            try {
+                if (pstmt != null) {
+                    pstmt.close();
+                }
+                if (conn != null) {
+                    conn.close();
+                }
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        }
     }
 
     public boolean confirmPassword(String p1, String p2){

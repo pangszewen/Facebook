@@ -6,6 +6,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import com.facebook.fullstackbackend.model.AccountManagement;
 import com.facebook.fullstackbackend.model.User;
 
+import java.time.LocalDate;
 import java.util.InputMismatchException;
 import java.util.Scanner;
 
@@ -15,6 +16,7 @@ public class FullstackBackendApplication {
         public static void main(String[] args) {
 	        SpringApplication.run(FullstackBackendApplication.class, args);
                 FullstackBackendApplication f  = new FullstackBackendApplication();
+                System.out.println(LocalDate.now());
                 f.startFacebook();
 		
         }
@@ -73,6 +75,7 @@ public class FullstackBackendApplication {
                                 }
                         }
                 }catch(InputMismatchException e){
+                        sc.nextLine();
                         startFacebook();
                 }
         }

@@ -32,6 +32,8 @@ public class UserBuilder {
     public Stack<String> requestList = new Stack<>();
     public int noOfCreatedPost;
     public int noOfDeletedPost;
+    public String banDuration;
+    public String banStartDate;
     
     public UserBuilder(){
         this.accountID = null;
@@ -42,6 +44,8 @@ public class UserBuilder {
         this.role = "normal";
         this.noOfCreatedPost = 0;
         this.noOfDeletedPost = 0;
+        this.banDuration = "P0Y0M0D";
+        this.banStartDate = "";
     }
 
     public UserBuilder(String accountID, String username, String email, String phoneNo, String password, String role){
@@ -53,6 +57,8 @@ public class UserBuilder {
         this.role = "normal";
         this.noOfCreatedPost = 0;
         this.noOfDeletedPost = 0;
+        this.banDuration = "P0Y0M0D";
+        this.banStartDate = "";
     }
 
     public void setAccountID(){
@@ -198,6 +204,20 @@ public class UserBuilder {
     }
     public int getNoOfDeletedPost(){
         return noOfDeletedPost;
+    }
+
+    public void setBanDuration(String banDuration){
+        this.banDuration = banDuration;
+    }
+    public String getBanDuration(){
+        return banDuration;
+    }
+
+    public void setBanStartDate(String banStartDate){
+        this.banStartDate = banStartDate;
+    }
+    public String getBanStartDate(){
+        return banStartDate;
     }
 
     // to create User object
@@ -425,16 +445,84 @@ public class UserBuilder {
         return user;
     }
 
+    public boolean isBanned(User user){
+        if(user.getBanStartDate().equals(""))
+            return false;
+        Period duration  = Period.parse(user.getBanDuration());
+        LocalDate startDate = LocalDate.parse(user.getBanStartDate());
+        Period difference = Period.between(startDate, LocalDate.now());
+        if(difference.getDays()>duration.getDays()){
+            user.setBanDuration("P0Y0M0D");
+            user.setBanStartDate(null);
+            database.updateUserProfile(user, "banDuration", user.getBanDuration());
+            database.updateUserProfile(user, "banStartDate", user.getBanStartDate());
+            return false;
+        }else{
+            String banDuration = null;
+            LocalDate endDate = null;
+            if(user.getBanDuration().equals("P1Y")){
+                banDuration = "ONE YEAR";
+                endDate = startDate.plusYears(1);
+            }else if(user.getBanDuration().equals("P6M")){
+                banDuration = "SIX MONTHS";
+                endDate = startDate.plusMonths(6);
+            }else if(user.getBanDuration().equals("P3M")){
+                banDuration = "THREE MONTHS";
+                endDate = startDate.plusMonths(3);
+            }else if(user.getBanDuration().equals("P1M")){
+                banDuration = "ONE MONTH";
+                endDate = startDate.plusMonths(1);
+            }else if(user.getBanDuration().equals("P7D")){
+                banDuration = "ONE WEEK";
+                endDate = startDate.plusDays(7);
+            }
+            System.out.println();
+            System.out.println("You are banned by admin for " + banDuration + " since " + user.getBanStartDate());
+            System.out.println("Remaining banned time: " + getRemainingBannedTime(user));
+            System.out.println("You can start using Facebook again on " + endDate);
+            System.out.println();
+            return true;
+        }
+    }
+
+    //To check the remaining banned time of any user
+    public String getRemainingBannedTime(User user) {
+            LocalDate currentDate = LocalDate.now();
+            Period banDuration = Period.parse(user.getBanDuration());
+            Period difference = Period.between(currentDate, LocalDate.parse(user.getBanStartDate()));
+            int year = banDuration.getYears()-difference.getYears();
+            int month = banDuration.getMonths()-difference.getMonths();
+            int day = banDuration.getDays()-difference.getDays();
+            String str = "";
+            if(year!=0) 
+                str += year + " year ";
+            if(month!=0){
+                str += month;
+                if(month>1)
+                    str += " months ";
+                else
+                    str += " month ";
+            }
+            if(day!=0){
+                str += day;
+                if(day>1)
+                    str += " days";
+                else
+                    str += " day";
+            }
+            return str;
+    }
+
     public boolean verifyPassword(String password){
         // Check password length
         if(password.length()<8){
-            System.out.println("Password must be at least 8 characters.");
+            System.out.println("***Password must be at least 8 characters***");
             return false;
         }
 
         // Check if password contains space characters
         if(password.contains(" ")){
-            System.out.println("Password must not contain any space.");
+            System.out.println("***Password must not contain any space***");
             return false;
         }
 
@@ -456,13 +544,22 @@ public class UserBuilder {
             return true;
         else{
             if(!upper)
-                System.out.println("Password must contains at least one uppercase letter.");
+                System.out.println("***Password must contains at least one uppercase letter***");
             if(!lower)
-                System.out.println("Password must contains at least one lowercase letter.");
+                System.out.println("***Password must contains at least one lowercase letter***");
             if(!digit)
-                System.out.println("Password must contains at least one digit");
+                System.out.println("***Password must contains at least one digit***");
             if(!special)
-                System.out.println("Password must contains at least one special character.");
+                System.out.println("***Password must contains at least one special character***");
+            return false;
+        }
+    }
+
+    public boolean verifyGender(String gender){
+        if(gender.toLowerCase().equals("female") || gender.toLowerCase().equals("male"))
+            return true;
+        else{
+            System.out.println("***Invalid input for gender***");
             return false;
         }
     }
@@ -474,7 +571,7 @@ public class UserBuilder {
             LocalDate.parse(birthday, formatter);
             return true; // Format is valid
         } catch (DateTimeParseException e) {
-            System.out.println("Invalid birthday format");
+            System.out.println("***Invalid birthday format***");
             return false; // Format is invalid
         }
     }

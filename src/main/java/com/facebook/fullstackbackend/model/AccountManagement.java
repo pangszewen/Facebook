@@ -13,13 +13,16 @@ public class AccountManagement {
     Scanner sc = new Scanner(System.in);
     UserBuilder builder = new UserBuilder();
     User user;
-    ConnectionGraph <String> graph;
+    ConnectionGraph<String> graph;
     UsersConnection connection = new UsersConnection();
     DatabaseSql<String> database = new DatabaseSql<>();
     PostManagement postManager = new PostManagement();
+    Admin admin = new Admin();
+    boolean isAdmin = false;
     LinkedList<String> history;
 
     public void registration(){
+        graph = new ConnectionGraph<>();
         System.out.println("\tRegistration Form");
         System.out.println("-------------------------");
 
@@ -77,6 +80,7 @@ public class AccountManagement {
         database.registerUser(user);
 
         // Add user to graph 
+        graph = graph.getGraph(graph);
         connection.registerGraph(graph, username);
         System.out.println("*************************");
     }
@@ -108,8 +112,11 @@ public class AccountManagement {
             database.setupProfile(user);
         }
         user = database.getProfile(emailOrPhoneNo);
+        if(builder.isBanned(user))
+            return null;        
 
-        graph.getGraph(graph);
+        graph = graph.getGraph(graph);
+        isAdmin = admin.isAdmin(user);
         System.out.println("\u001B[1m" + user.getName() + "\u001B[0m");
         System.out.println("Welcome to Facebook!");
         System.out.println("*************************");
@@ -151,7 +158,12 @@ public class AccountManagement {
 
         // Get gender
         System.out.println("What is your gender? (MALE/FEMALE)");
-        builder.setGender(sc.nextLine().toUpperCase());
+        String gender = sc.nextLine();
+        while(!builder.verifyGender(gender)){
+            System.out.println("What is your gender? (MALE/FEMALE)");
+            gender = sc.nextLine();
+        }
+        builder.setGender(gender);
 
         // Initialize number of friends
         builder.setNoOfFriends(0);
@@ -193,6 +205,8 @@ public class AccountManagement {
                 System.out.println("1 - Posts");
                 System.out.println("2 - About");
                 System.out.println("3 - Friends");
+                if(isAdmin)
+                    System.out.println("4 - Admin authorities");
                 System.out.println("*************************");
                 choice = sc.nextInt();
                 sc.nextLine();
@@ -251,10 +265,29 @@ public class AccountManagement {
                             }
                             break;
 
+                    case 4: if(isAdmin){
+                                int choiceAdmin = 1;
+                                while(choiceAdmin>0){
+                                    System.out.println("0 - Back");
+                                    System.out.println("1 - Ban user");
+                                    System.out.println("2 - Delete user");
+                                    System.out.println("3 - Set user as admin");
+                                    System.out.println("4 - Add new prohibited words");
+                                    System.out.println("*************************");
+                                    choiceAdmin = sc.nextInt();
+                                    sc.nextLine();
+                                    System.out.println("*************************");
+                                    switch(choiceAdmin){
+                                        case 1,2,3 -> searchUsers();
+                                        case 4 -> admin.updateProhibitedWord();
+                                    }
+                                }
+                            }
                 }
             }
         }catch(InputMismatchException e){
             System.out.println("*************************");
+            sc.nextLine();
             viewMyPage();
         }
     }
@@ -276,13 +309,15 @@ public class AccountManagement {
                 System.out.println("1 - Posts");
                 System.out.println("2 - About");
                 System.out.println("3 - Friends");
+                if(isAdmin)
+                    System.out.println("4 - Admin authorities");
                 System.out.println("-------------------------");
                 if(isFriend)
-                    System.out.println("4 - Remove friend");    // if they are already friends
+                    System.out.println("5 - Remove friend");    // if they are already friends
                 else if(statusRequest = connection.checkRequest(u1, user)){
                     System.out.println(u1.getName() + " has requested to be your friend");
-                    System.out.println("4 - Confirm request");  // if the searched user have sent a friend request to the user
-                    System.out.println("5 - Delete request");
+                    System.out.println("5 - Confirm request");  // if the searched user have sent a friend request to the user
+                    System.out.println("6 - Delete request");
                     isFriend=true;
                 }else
                     statusRequest = connection.checkRequest(user, u1);
@@ -290,9 +325,9 @@ public class AccountManagement {
                 if(u1.getUsername() != user.getUsername()){
                     if(!isFriend){
                         if(statusRequest)
-                            System.out.println("4 - Cancel friend request");
+                            System.out.println("5 - Cancel friend request");
                         else
-                            System.out.println("4 - Add friend");
+                            System.out.println("5 - Add friend");
                     }
                 }
 
@@ -334,8 +369,35 @@ public class AccountManagement {
                                 }
                             }
                             break;
+                    
+                    case 4: if(isAdmin){
+                                int choiceAdmin = 1;
+                                while(choiceAdmin>0){
+                                    System.out.println("0 - Back");
+                                    System.out.println("1 - Ban user");
+                                    System.out.println("2 - Delete user");
+                                    if(!admin.isAdmin(u1))
+                                        System.out.println("3 - Set as admin");
+                                    System.out.println("*************************");
+                                    choiceAdmin = sc.nextInt();
+                                    sc.nextLine();
+                                    System.out.println("*************************");
+                                    switch(choiceAdmin){
+                                        case 1: admin.banUser(u1);
+                                                break;
+                                        case 2: graph = admin.deleteAccount(u1, graph);
+                                                return;
+                                        case 3: if(!admin.isAdmin(u1)){
+                                                    u1 = admin.setAdmin(u1);
+                                                }else{
+                                                    choiceAdmin=4;
+                                                }
+                                                break;
+                                    }
+                                }
+                            }
 
-                    case 4: if(isFriend&&!statusRequest)        // user remove friend
+                    case 5: if(isFriend&&!statusRequest)        // user remove friend
                                 connection.removeFriend(user, u1, graph);
                             else if(isFriend&&statusRequest){    // user confirm friend request
                                 connection.confirmRequest(user, u1, graph);
@@ -346,12 +408,13 @@ public class AccountManagement {
                                 connection.cancelRequest(user, u1);
                             break;
 
-                    case 5: connection.cancelRequest(u1, user); // user delete friend request sent by searched user
+                    case 6: connection.cancelRequest(u1, user); // user delete friend request sent by searched user
                             break;
                 }
             }
         }catch(InputMismatchException e){
             System.out.println("*************************");
+            sc.nextLine();
             viewOtherPage(u1);
         }
     }
@@ -438,6 +501,7 @@ public class AccountManagement {
             }
         }catch(InputMismatchException e){
             System.out.println("*************************");
+            sc.nextLine();
             searchFriend(u1);
         }
     }
@@ -514,10 +578,37 @@ public class AccountManagement {
                         else
                             viewMyPage();
                     }
+
+                    result = database.ifContains(emailOrPhoneNoOrUsernameOrName);     // ArrayList of user objects of search result
+
+                    // Sort the names alphabetically
+                    for(int i=1; i<result.size(); i++){
+                        for(int j=0; j<i; j++){
+                            if(result.get(i).getName().compareTo(result.get(j).getName())<0){
+                                User temp = result.get(i);
+                                result.set(i, result.get(j));
+                                result.set(j, temp);
+                            }
+                        }
+                    }
+
+                    if(result.size()==0){
+                        System.out.println("No result found.");
+                        System.out.println("-------------------------");
+                        System.out.println("0 - Back");
+                        System.out.println("1 - Search again");
+                        System.out.println("*************************");
+                        choice = sc.nextInt();
+                        sc.nextLine();
+                        System.out.println("*************************");
+                        if(choice == 1)
+                            choice = result.size()+1;
+                    }
                 }
             }
         }catch(InputMismatchException e){
             System.out.println("*************************");
+            sc.nextLine();
             searchUsers();
         }
     }
@@ -557,6 +648,7 @@ public class AccountManagement {
             }
         }catch(InputMismatchException e ){
             System.out.println("*************************");
+            sc.nextLine();
             displayRequest();
         }
     }
@@ -621,6 +713,7 @@ public class AccountManagement {
             }
         }catch(InputMismatchException e){
             System.out.println("*************************");
+            sc.nextLine();
             displayFriends(u1);
         }
     }
@@ -652,6 +745,7 @@ public class AccountManagement {
             }
         }catch(InputMismatchException e){
             System.out.println("*************************");
+            sc.nextLine();
             displayMutual(u1, u2, graph);
         }
     }
@@ -671,6 +765,8 @@ public class AccountManagement {
                     System.out.println("-------------------------");
                     if(i<recomUser.size()-1)
                         System.out.println("0 - Next");
+                    else
+                        System.out.println("0 - Refresh");
                     if(statusRequest)
                         System.out.println("1 - Cancel friend request");
                     else if(pendingRequest)
@@ -688,7 +784,7 @@ public class AccountManagement {
 
                     // Condition if input index out of bound
                     if(choice==0 && i==recomUser.size()-1)
-                        choice = 3;
+                        i=-1;
                     
                     switch(choice){
                         case 0: continue;
@@ -715,6 +811,7 @@ public class AccountManagement {
             }
         }catch(InputMismatchException e){
             System.out.println("*************************");
+            sc.nextLine();
             displayRecommendedUsers();
         }
     }
@@ -785,7 +882,7 @@ public class AccountManagement {
                     System.out.println("4 - View comments");
                     if(i!=0)
                         System.out.println("5 - Back");
-                    if(user.getUsername().equals(u1.getUsername())){
+                    if(user.getUsername().equals(u1.getUsername()) || isAdmin){
                         System.out.println("6 - Delete post");
                         // Check if user is viewing his own page or other users page
                         System.out.println("-1 - Back to posts tab");
@@ -808,10 +905,14 @@ public class AccountManagement {
                                     break;
                             case 4: postManager.viewComments(yourPosts.get(i));
                                     break;
-                            case 5: i = i+2;
+                            case 5: if(i!=0)
+                                        i = i+2;
                                     break;
                             case 6: if(user.getUsername().equals(u1.getUsername())){
                                         postManager.deletePost(yourPosts.get(i), user);
+                                        history = history.remove(yourPosts.get(i).getPostID(), history);
+                                    }else if(isAdmin){
+                                        admin.manuallyRemoveInappropriateContent(yourPosts.get(i), u1);
                                         history = history.remove(yourPosts.get(i).getPostID(), history);
                                     }
                                     break;
@@ -837,6 +938,7 @@ public class AccountManagement {
             }
         }catch(InputMismatchException e){
             System.out.println("*************************");
+            sc.nextLine();
             displayPosts(u1);
         }
     }
@@ -860,6 +962,7 @@ public class AccountManagement {
             }  
         }catch(InputMismatchException e){
             System.out.println("*************************");
+            sc.nextLine();
             displayHistory();;
         }
     }

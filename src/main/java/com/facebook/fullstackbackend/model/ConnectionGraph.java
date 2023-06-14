@@ -132,6 +132,45 @@ public class ConnectionGraph<T extends Comparable<String>> {
             return false;
     }
 
+    public ConnectionGraph<String> removeVertex(ConnectionGraph<String> graph, String v) {
+        // Remove all edges of the vertex from graph
+        ArrayList<String> edges = graph.getNeighbours(graph, v);
+        for(String x : edges){
+            graph = graph.removeUndirectedEdge(graph, v, x);
+        }
+
+        Vertex<String> temp = graph.head;
+        Vertex<String> previous = null;
+        while (temp != null) {
+            if (temp.vertexInfo.equals(v)) {
+                if (previous == null) {
+                    // Remove the head vertex
+                    graph.head = temp.nextVertex;
+                } else {
+                    previous.nextVertex = temp.nextVertex;
+                }
+                try {
+                    Connection connection = DriverManager.getConnection("jdbc:mysql://localhost:3306/database", "root", "");
+                    PreparedStatement statement = connection.prepareStatement("DELETE FROM graph WHERE user = ?");
+                    statement.setString(1, v);
+                    statement.executeUpdate();
+                    statement.close();
+                    connection.close();
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                }
+                
+                graph.size--;
+                return graph;
+            }
+            
+            previous = temp;
+            temp = temp.nextVertex;
+        }
+        System.out.println("Failed to remove user");
+        return graph;
+    }
+
 
     public ConnectionGraph<String> registerVertex(ConnectionGraph<String> graph, String v) {
         boolean status = addVertex(graph, v);

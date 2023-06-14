@@ -149,8 +149,10 @@ public class LinkedList<E>{
             Post post = database.getPost(current.element);
             User u1 = database.getProfile(post.getUserID());
             postManager.viewPost(post);
-            if(current!=history.tail)
+            if(current.element!=history.tail.element){
+                System.out.println(current.next.element);
                 System.out.println("0 - Next");
+            }
             System.out.println("1 - View post");
             if(current!=history.head)
                 System.out.println("2 - Back");
@@ -159,7 +161,7 @@ public class LinkedList<E>{
             choice = sc.nextInt();
             System.out.println("*************************");
             switch(choice){
-                case 0: if(current!=history.tail)
+                case 0: if(current.element!=history.tail.element)
                             current = current.next;
                         break;
                 case 1: Node<String> temp = current.prev;

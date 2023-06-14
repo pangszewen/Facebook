@@ -25,6 +25,8 @@ public class User {
     private Stack<String> requestList;
     private int noOfCreatedPost;
     private int noOfDeletedPost;
+    private String banDuration;
+    private String banStartDate;
     enum Gender{
         MALE,
         FEMALE
@@ -49,6 +51,8 @@ public class User {
         this.requestList = builder.requestList;
         this.noOfCreatedPost = builder.noOfCreatedPost;
         this.noOfDeletedPost = builder.noOfDeletedPost;
+        this.banDuration = builder.banDuration;
+        this.banStartDate = builder.banStartDate;
     }
 
     public void setAccountID(){
@@ -187,5 +191,19 @@ public class User {
     }
     public int getNoOfDeletedPost(){
         return noOfDeletedPost;
+    }
+
+    public void setBanDuration(String banDuration){
+        this.banDuration = banDuration;
+    }
+    public String getBanDuration(){
+        return banDuration;
+    }
+
+    public void setBanStartDate(String banStartDate){
+        this.banStartDate = banStartDate;
+    }
+    public String getBanStartDate(){
+        return banStartDate;
     }
 }

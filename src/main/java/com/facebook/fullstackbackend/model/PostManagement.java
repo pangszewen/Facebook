@@ -8,8 +8,7 @@ import com.facebook.fullstackbackend.repository.DatabaseSql;
 public class PostManagement {
     Scanner sc = new Scanner(System.in);
     DatabaseSql<String> database = new DatabaseSql<>();
-
-    public PostManagement(){}
+    Admin admin = new Admin();
 
     // Create new post
     public void createPost(User user){
@@ -52,7 +51,7 @@ public class PostManagement {
             databaseInt.updateUserProfile(user, "noOfCreatedPost", user.getNoOfCreatedPost());
         }
 
-        // check for inappropriate content   
+        autoRemoveInappropriateContent(user, post);
     }
 
     // Delete existing post
@@ -119,7 +118,10 @@ public class PostManagement {
     public void viewPost(Post post){
         User user = database.getProfile(post.getUserID());
         System.out.println("\u001B[1m" + user.getName() + "\u001B[0m");     // Bold text
+        System.out.println("<" + String.valueOf(post.getStatus()).toLowerCase() + ">");
+        System.out.println();
         System.out.println(post.getContent());
+        System.out.println();
         System.out.println(post.getPostTime());
         System.out.println("-------------------------");
         System.out.println(post.getLikes() + " likes\t\t" + post.getComments() + " comments");
@@ -130,6 +132,7 @@ public class PostManagement {
         int choice = 5;
         while(choice!=-1){
             ArrayList<String> likeList = database.getPostList(post, "likeList");
+            User u1 = database.getProfile(post.getUserID());
             viewPost(post);
                         
             boolean likeStatus = false;
@@ -145,7 +148,7 @@ public class PostManagement {
             System.out.println("2 - View likes");
             System.out.println("3 - Comment");
             System.out.println("4 - View comments");
-            if(user.getAccountID().equals(post.getUserID()))
+            if(user.getAccountID().equals(post.getUserID()) || admin.isAdmin(user))
                 System.out.println("5 - Delete post");
             System.out.println("-1 - Back to history page");
             System.out.println("*************************");
@@ -168,6 +171,9 @@ public class PostManagement {
                     case 5: if(user.getAccountID().equals(post.getUserID())){
                                 deletePost(post, user);
                                 history = history.remove(post.getPostID(), history);
+                            }else if(admin.isAdmin(user)){
+                                admin.manuallyRemoveInappropriateContent(post, u1);
+                                history = history.remove(post.getPostID(), history);
                             }   
                             break;
                 }
@@ -179,7 +185,7 @@ public class PostManagement {
                     sc.nextLine();
                     System.out.println("*************************");
                 }else if(choice==5){
-                    if(user.getAccountID().equals(post.getUserID())){
+                    if(user.getAccountID().equals(post.getUserID()) || admin.isAdmin(user)){
                         System.out.println("Post successfully deleted");
                         System.out.println("*************************");
                         choice = -1;    // Break loop
@@ -213,4 +219,14 @@ public class PostManagement {
         }
     }
 
+    // Content is automatically determined whether it's appropriate or not by checking the prohibited words list
+    // This method is implemented after user posted new post, if it is inappropriate, the post will be taken down immediately
+    public void autoRemoveInappropriateContent(User user, Post post) {        
+        if(database.containsOffensiveLanguage(post.getContent())){
+            deletePost(post, user);
+            System.out.println("***Your post contains inappropriate content**");
+            System.out.println("***Your post has been automatically deleted by the system***");
+            System.out.println("*************************"); 
+        }
+    }
 }
