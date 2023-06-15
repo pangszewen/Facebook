@@ -2,6 +2,8 @@ package com.facebook.fullstackbackend.model;
 
 import java.time.LocalDate;
 import java.time.Period;
+import java.util.ArrayList;
+import java.util.InputMismatchException;
 import java.util.Scanner;
 
 import com.facebook.fullstackbackend.repository.DatabaseSql;
@@ -84,12 +86,61 @@ public class Admin {
     }
 
     public void updateProhibitedWord(){
-        System.out.print("Enter new prohibited words: ");
-        String newWord = sc.nextLine();
-        System.out.println("*************************");
-        database.addNewProhibitedWord(newWord);
+        try{
+            int choice = 2;
+            while(choice>0){
+                boolean status = false;
+                ArrayList<String> prohibitedWords = database.getProhibitedWords();
+                displayProhibitedWord(prohibitedWords);
+                System.out.print("Enter new prohibited words: ");
+                String newWord = sc.nextLine();
+                System.out.println("-------------------------");
+                for(String x : prohibitedWords){
+                    if(newWord.contains(x)){
+                        System.out.println("This word is already included in this prohibited word: " + x);
+                        System.out.println("*************************");
+                        while(choice>1 || choice<0){
+                            System.out.println("0 - Back");
+                            System.out.println("1 - Continue to add");
+                            System.out.println("*************************");
+                            choice = sc.nextInt();
+                            sc.nextLine();
+                            System.out.println("*************************");
+                        }
+                        status = true;
+                        break;
+                    }
+                }
+                if(!status){
+                    database.addNewProhibitedWord(newWord);
+                    System.out.println("Added prohibited word: " + newWord);
+                    System.out.println("*************************");
+                    while(choice>1 || choice<0){
+                        System.out.println("0 - Back");
+                        System.out.println("1 - Continue to add");
+                        System.out.println("*************************");
+                        choice = sc.nextInt();
+                        sc.nextLine();
+                        System.out.println("*************************");
+                    }
+                }
+            }
+        }catch(InputMismatchException e){
+            System.out.println("*************************");
+            System.out.println("Invalid input");
+            System.out.println("*************************");
+            sc.nextLine();
+            updateProhibitedWord();
+        }
     }
 
-
+    public void displayProhibitedWord(ArrayList<String> prohibitedWords){
+        System.out.println("<" + prohibitedWords.size() + " prohibited words>");
+        System.out.println("-------------------------");
+        for(int i=0; i<prohibitedWords.size(); i++){
+            System.out.println((i+1) + " - " + prohibitedWords.get(i));
+        }
+        System.out.println("*************************");
+    }
 
 }

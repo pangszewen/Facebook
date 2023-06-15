@@ -1234,6 +1234,41 @@ public class DatabaseSql<T> {
         return false;
     }
 
+    public ArrayList<String> getProhibitedWords(){
+        Connection conn = null;
+        PreparedStatement pstmt = null;
+        ArrayList<String> prohibitedWords = new ArrayList<>();
+        try {
+            conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/database", "root", "");
+
+            pstmt = conn.prepareStatement("SELECT * FROM prohibitedwords");
+            ResultSet rs = pstmt.executeQuery();
+
+            while (rs.next()) {
+                prohibitedWords.add(rs.getString("words"));
+            }
+
+            return prohibitedWords;
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally {
+            try {
+                if (pstmt != null) {
+                    pstmt.close();
+                }
+                if (conn != null) {
+                    conn.close();
+                }
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        }
+        System.out.println("Failed to get prohibited words");
+        return prohibitedWords;
+    }
+
+
+
     public void addNewProhibitedWord(String newProhibitedWord) {
         Connection conn = null;
         PreparedStatement pstmt = null;
