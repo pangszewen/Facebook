@@ -34,6 +34,8 @@ public class UserBuilder {
     public int noOfDeletedPost;
     public String banDuration;
     public String banStartDate;
+    public ArrayList<String> groups;
+    public ArrayList<String> groupInvitations;
     
     public UserBuilder(){
         this.accountID = null;
@@ -46,6 +48,8 @@ public class UserBuilder {
         this.noOfDeletedPost = 0;
         this.banDuration = "P0Y0M0D";
         this.banStartDate = "";
+        this.groups = new ArrayList<>();
+        this.groupInvitations = new ArrayList<>();
     }
 
     public UserBuilder(String accountID, String username, String email, String phoneNo, String password, String role){
@@ -59,10 +63,12 @@ public class UserBuilder {
         this.noOfDeletedPost = 0;
         this.banDuration = "P0Y0M0D";
         this.banStartDate = "";
+        this.groups = new ArrayList<>();
+        this.groupInvitations = new ArrayList<>();
     }
 
     public void setAccountID(){
-        this.accountID = String.valueOf(database.generateAccountID());
+        this.accountID = database.generateID("useraccount", "accountID");
     }
     public void setAccountID(String accountID){
         this.accountID = accountID;
@@ -218,6 +224,27 @@ public class UserBuilder {
     }
     public String getBanStartDate(){
         return banStartDate;
+    }
+
+    public void setGroups(ArrayList<String> groups){
+        this.groups = groups;
+    }
+    public void setGroups(String group){
+        this.groups.add(group);
+    }
+    public ArrayList<String> getGroups(){
+        return groups;
+    }
+
+    public void setGroupInvitations(ArrayList<String> groupInvitations){
+        this.groupInvitations = groupInvitations;
+    }
+    public void setGroupInvitations(User inviter, Group group){
+        String str = inviter.getAccountID() + ":" + group.getGroupID();
+        this.groupInvitations.add(str);
+    }
+    public ArrayList<String> getGroupInvitations(){
+        return groupInvitations;
     }
 
     // to create User object

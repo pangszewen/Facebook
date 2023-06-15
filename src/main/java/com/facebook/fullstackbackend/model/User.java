@@ -27,6 +27,8 @@ public class User {
     private int noOfDeletedPost;
     private String banDuration;
     private String banStartDate;
+    private ArrayList<String> groups;
+    private ArrayList<String> groupInvitations;
     enum Gender{
         MALE,
         FEMALE
@@ -53,10 +55,12 @@ public class User {
         this.noOfDeletedPost = builder.noOfDeletedPost;
         this.banDuration = builder.banDuration;
         this.banStartDate = builder.banStartDate;
+        this.groups = builder.groups;
+        this.groupInvitations = builder.groupInvitations;
     }
 
     public void setAccountID(){
-        this.accountID = String.valueOf(database.generateAccountID());
+        this.accountID = database.generateID("useraccount", "accountID");
     }
     public String getAccountID(){
         return accountID;
@@ -205,5 +209,26 @@ public class User {
     }
     public String getBanStartDate(){
         return banStartDate;
+    }
+
+    public void setGroups(ArrayList<String> groups){
+        this.groups = groups;
+    }
+    public void setGroups(String group){
+        this.groups.add(group);
+    }
+    public ArrayList<String> getGroups(){
+        return groups;
+    }
+
+    public void setGroupInvitations(ArrayList<String> groupInvitations){
+        this.groupInvitations = groupInvitations;
+    }
+    public void setGroupInvitations(User inviter, Group group){
+        String str = inviter.getAccountID() + ":" + group.getGroupID();
+        this.groupInvitations.add(str);
+    }
+    public ArrayList<String> getGroupInvitations(){
+        return groupInvitations;
     }
 }

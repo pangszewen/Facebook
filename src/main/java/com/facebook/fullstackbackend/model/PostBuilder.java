@@ -19,9 +19,17 @@ public class PostBuilder {
     }
 
     public PostBuilder(User user){
-        this.postID = user.getAccountID() + String.valueOf(user.getNoOfCreatedPost());
+        this.postID = user.getAccountID() + "U" + String.valueOf(user.getNoOfCreatedPost());
         this.userID = user.getAccountID();
         this.status = Post.Status.PUBLIC;
+        this.likes = 0;
+        this.comments = 0;
+    }
+
+    public PostBuilder(Group group, User user){
+        this.postID = group.getGroupID() + "G" +String.valueOf(group.getNoOfCreatedPost());
+        this.userID = user.getAccountID();
+        this.status = Post.Status.GROUP;
         this.likes = 0;
         this.comments = 0;
     }
@@ -81,29 +89,4 @@ public class PostBuilder {
     public Post build(){
         return new Post(this);
     }
-    
-
-    /*
-    enum Feeling{
-        HAPPY,
-        SAD,
-        ANGRY,
-        EXCITED,
-        SILLY,
-        LOVED,
-        GRATEFUL,
-        TIRED,
-        PROUD,
-        ALONE,
-        AWESOME,
-        ANNOYED,
-        STRESSED,
-        ASHAMED,
-        HORRIBLE,
-        ALIVE,
-        HURT,
-        SHY,
-        WEIRD
-    }
-    */
 }

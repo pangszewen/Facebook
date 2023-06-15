@@ -10,7 +10,8 @@ public class Post {
     private String postTime;
     enum Status{
         PUBLIC,
-        PRIVATE
+        PRIVATE,
+        GROUP
     }
 
     public Post(PostBuilder builder){

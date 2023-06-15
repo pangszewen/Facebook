@@ -3,7 +3,6 @@ package com.facebook.fullstackbackend.model;
 import java.time.LocalDate;
 import java.time.Period;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.InputMismatchException;
 import java.util.Scanner;
 
@@ -17,6 +16,7 @@ public class AccountManagement {
     UsersConnection connection = new UsersConnection();
     DatabaseSql<String> database = new DatabaseSql<>();
     PostManagement postManager = new PostManagement();
+    GroupManagement groupManager = new GroupManagement();
     Admin admin = new Admin();
     boolean isAdmin = false;
     LinkedList<String> history;
@@ -223,9 +223,9 @@ public class AccountManagement {
                                 choicePost = sc.nextInt();
                                 System.out.println("*************************");
                                 switch(choicePost){
-                                    case 1: postManager.createPost(user);
+                                    case 1: postManager.createUserPost(user);
                                             break;
-                                    case 2: displayPosts(user);
+                                    case 2: history = postManager.displayPosts(user, user, graph, history);
                                             break;
                                 }
                             }
@@ -336,7 +336,7 @@ public class AccountManagement {
                 sc.nextLine();
                 System.out.println("*************************");
                 switch(choice){
-                    case 1: displayPosts(u1);
+                    case 1: history = postManager.displayPosts(user, u1, graph, history);
                             break;
 
                     case 2: int choiceAbout = 1;
@@ -399,10 +399,9 @@ public class AccountManagement {
 
                     case 5: if(isFriend&&!statusRequest)        // user remove friend
                                 connection.removeFriend(user, u1, graph);
-                            else if(isFriend&&statusRequest){    // user confirm friend request
-                                connection.confirmRequest(user, u1, graph);
-                                connection.cancelRequest(user, u1);
-                            }else if(!isFriend&&!statusRequest)  // user send friend request
+                            else if(isFriend&&statusRequest)    // user confirm friend request
+                                graph = connection.confirmRequest(user, u1, graph);
+                            else if(!isFriend&&!statusRequest)  // user send friend request
                                 connection.sendRequest(user, u1);
                             else                                // user cancel friend request sent to searched user
                                 connection.cancelRequest(user, u1);
@@ -414,8 +413,122 @@ public class AccountManagement {
             }
         }catch(InputMismatchException e){
             System.out.println("*************************");
+            System.out.println("Invalid input");
+            System.out.println("*************************");
             sc.nextLine();
             viewOtherPage(u1);
+        }
+    }
+
+    public void viewGroupPage(Group group){
+        try{
+            int choice = 1;
+            boolean isGroupAdmin = groupManager.isGroupAdmin(group, user);
+            boolean isGroupMember = groupManager.isMember(group, user);
+            while(choice>0){
+                System.out.println("\u001B[1m" + group.getGroupName() + "\u001B[0m");
+                System.out.println("-------------------------");
+                System.out.println("0 - Back");
+                System.out.println("1 - Posts");
+                System.out.println("2 - About");
+                System.out.println("3 - Members");
+                if(isGroupAdmin)
+                    System.out.println("4 - Admin authorities");
+                System.out.println("-------------------------");
+                if(isGroupMember)
+                    System.out.println("5 - Leave group");    // if user is already a member of the group
+                else if(isGroupAdmin)
+                    System.out.println("5 - Delete group");
+                else
+                    System.out.println("5 - Join group");
+
+                System.out.println("*************************");
+                choice = sc.nextInt();
+                sc.nextLine();
+                System.out.println("*************************");
+                switch(choice){
+                    case 1: postManager.displayGroupPosts(group, user, history);
+                            break;
+
+                    case 2: int choiceAbout = 1;
+                            while(choiceAbout>0){
+                                groupManager.viewGroupInfo(group);
+                                System.out.println("0 - Back"); 	
+                                if(isGroupAdmin)
+                                    System.out.println("1 - Edit group info");
+                                System.out.println("*************************");
+                                choiceAbout = sc.nextInt();
+                                sc.nextLine();
+                                System.out.println("*************************");
+                                if(choiceAbout==1 && isGroupAdmin)
+                                    group = groupManager.editGroupInfo(group);
+                            }               
+                            break;
+
+                    case 3: int choiceMembers = 1;
+                            while(choiceMembers>0){
+                                System.out.println("<" + group.getNoOfMembers() + " members>");
+                                System.out.println("-------------------------");
+                                System.out.println("0 - Back");
+                                System.out.println("1 - View members");
+                                System.out.println("2 - Invite members");
+                                if(isGroupAdmin)
+                                    System.out.println("3 - Remove members");
+                                System.out.println("*************************");
+                                choiceMembers = sc.nextInt();
+                                sc.nextLine();
+                                System.out.println("*************************");
+                                switch(choiceMembers){
+                                    case 1: displayMembers(group, user);
+                                            break;
+                                    case 2: groupManager.inviteMember(group, user);
+                                            break;
+                                    case 3: if(isGroupAdmin)
+                                                groupManager.removeMember(group);
+                                            break;
+                                }
+                            }
+                            break;
+                    
+                    case 4: if(isGroupAdmin){
+                                int choiceAdmin = 1;
+                                while(choiceAdmin>0){
+                                    System.out.println("0 - Back");
+                                    System.out.println("1 - Edit group info");
+                                    System.out.println("2 - Remove member");
+                                    System.out.println("3 - Delete group");
+                                    System.out.println("*************************");
+                                    choiceAdmin = sc.nextInt();
+                                    sc.nextLine();
+                                    System.out.println("*************************");
+                                    switch(choiceAdmin){
+                                        case 1: group = groupManager.editGroupInfo(group);
+                                                break;
+                                        case 2: group = groupManager.removeMember(group);
+                                                return;
+                                        case 3: database.deleteGroup(group);
+                                                choiceAdmin = 0;     // Break loop
+                                                choice = 0;
+                                                break;
+                                    }
+                                }
+                            }
+
+                    case 5: if(isGroupMember)
+                                group = groupManager.leaveGroup(group, user);   // If user is a group member
+                            else if(isGroupAdmin){
+                                database.deleteGroup(group);    // If user is group admin
+                                choice = 0;
+                            }else
+                                group = groupManager.joinGroup(group, user);    // If user is not a group member
+                }
+            }
+        }catch(InputMismatchException e){
+            System.out.println("*************************");
+            System.out.println("Invalid input");
+            System.out.println("*************************");
+            sc.nextLine();
+            viewGroupPage(group);
         }
     }
 
@@ -500,6 +613,8 @@ public class AccountManagement {
                 }
             }
         }catch(InputMismatchException e){
+            System.out.println("*************************");
+            System.out.println("Invalid input");
             System.out.println("*************************");
             sc.nextLine();
             searchFriend(u1);
@@ -608,6 +723,8 @@ public class AccountManagement {
             }
         }catch(InputMismatchException e){
             System.out.println("*************************");
+            System.out.println("Invalid input");
+            System.out.println("*************************");
             sc.nextLine();
             searchUsers();
         }
@@ -639,7 +756,6 @@ public class AccountManagement {
                 switch(choice){
                     case 0: continue;
                     case 1: graph = connection.confirmRequest(requestList.get(i), user, graph);
-                            connection.cancelRequest(requestList.get(i), user);
                             break;
                     case 2: connection.cancelRequest(requestList.get(i), user);
                             break;
@@ -648,12 +764,14 @@ public class AccountManagement {
             }
         }catch(InputMismatchException e ){
             System.out.println("*************************");
+            System.out.println("Invalid input");
+            System.out.println("*************************");
             sc.nextLine();
             displayRequest();
         }
     }
 
-    // Method for displayFriends(user) with no arguments
+    // Method for displayFriends() with no arguments - used in test class
     public void displayFriends(){
         displayFriends(user);
     }
@@ -713,6 +831,8 @@ public class AccountManagement {
             }
         }catch(InputMismatchException e){
             System.out.println("*************************");
+            System.out.println("Invalid input");
+            System.out.println("*************************");
             sc.nextLine();
             displayFriends(u1);
         }
@@ -744,6 +864,8 @@ public class AccountManagement {
                 }
             }
         }catch(InputMismatchException e){
+            System.out.println("*************************");
+            System.out.println("Invalid input");
             System.out.println("*************************");
             sc.nextLine();
             displayMutual(u1, u2, graph);
@@ -792,7 +914,6 @@ public class AccountManagement {
                                     connection.cancelRequest(user, recomUser.get(i));
                                 else if(pendingRequest){
                                     graph = connection.confirmRequest(recomUser.get(i), user, graph);
-                                    connection.cancelRequest(recomUser.get(i), user);
                                 }else
                                     connection.sendRequest(user, recomUser.get(i));
                                 break;
@@ -811,135 +932,118 @@ public class AccountManagement {
             }
         }catch(InputMismatchException e){
             System.out.println("*************************");
+            System.out.println("Invalid input");
+            System.out.println("*************************");
             sc.nextLine();
             displayRecommendedUsers();
         }
     }
 
-    public void displayPosts(User u1){
+    public void displayMembers(Group group, User user){
         try{
-            ArrayList<Post> yourPosts = database.getUserPosts(user, u1, graph);
-            Collections.reverse(yourPosts);
-            System.out.println("<" + yourPosts.size() + " posts>");
-            System.out.println("-------------------------");
+            ArrayList<String> membersID = group.getMembers();
+            ArrayList<User> members = new ArrayList<>();
+            for(int i=0; i<membersID.size(); i++){
+                members.add(database.getProfile(membersID.get(i)));
+            }
             int choice = 1;
-            if(yourPosts.size()==0){
-                while(choice!=-1){
-                    System.out.println("No posts yet");
-                    if(u1.getUsername().equals(user.getUsername()))
-                        System.out.println("-1 - Back to posts tab");
-                    else
-                        System.out.println("-1 - Back to main page");
-                    System.out.println("*************************");
-                    choice = sc.nextInt();
-                    sc.nextLine();
-                    System.out.println("*************************");
+            while(choice>0){
+                System.out.println("<" + members.size() + " members>");
+                System.out.println("0 - Back");
+                for(int i=0; i<members.size(); i++){
+                    System.out.println((i+1) + " - " + members.get(i).getName());
+                }
+                System.out.println("*************************");
+                choice = sc.nextInt();
+                sc.nextLine();
+                System.out.println("*************************");
+
+                if(choice>0){
+                    User u1 = members.get(choice-1);
+                    if(u1.getAccountID().equals(user.getAccountID()))
+                        viewMyPage();
+                    else    
+                        viewOtherPage(u1);
                 }
             }
-            
-            while(choice>=0){
-                for(int i=0; i<yourPosts.size(); i++){
-                    yourPosts = database.getUserPosts(user, u1, graph);
-                    Collections.reverse(yourPosts);
-                    if(yourPosts.size()==0){
-                        System.out.println("No posts yet");
-                        if(u1.getUsername().equals(user.getUsername()))
-                            System.out.println("-1 - Back to posts tab");
-                        else
-                            System.out.println("-1 - Back to main page");
-                        System.out.println("*************************");
-                        choice = sc.nextInt();
-                        sc.nextLine();
-                        System.out.println("*************************");
-                        break;
-                    }
-                    ArrayList<String> likeList = database.getPostList(yourPosts.get(i), "likeList");
-                    postManager.viewPost(yourPosts.get(i));
-                    
-                    // Keep track of user viewed post
-                    if(history.contains(yourPosts.get(i).getPostID())){
-                        history = history.remove(yourPosts.get(i).getPostID(), history);
-                        history.addFirst(yourPosts.get(i).getPostID());
-                    }else
-                        history.addFirst(yourPosts.get(i).getPostID());
 
-                    if(i<yourPosts.size()-1)
-                        System.out.println("0 - Next");
-                    else
-                        System.out.println("0 - Refresh");
-                    boolean likeStatus = false;
-                    for(String x : likeList){
-                        if(x.equals(user.getUsername())){
-                            System.out.println("1 - Unlike");
-                            likeStatus = true;
-                            break;
-                        }
+        }catch(InputMismatchException e){
+            System.out.println("*************************");
+            System.out.println("Invalid input");
+            System.out.println("*************************");
+            sc.nextLine();
+            displayMembers(group, user);
+        }
+    }
+
+    public void viewInvitation(User user){
+        try{
+            int choice = -1;
+            while(choice!=0){
+                ArrayList<String> groupInvitations = user.getGroupInvitations();
+                ArrayList<String> groupsID = new ArrayList<>();
+                ArrayList<Group> groups = new ArrayList<>();
+                for(String x : groupInvitations){
+                    String[] xArr = x.split(":");
+                    if(!groupsID.contains(xArr[1]))
+                        groupsID.add(xArr[1]);
+                }
+                for(String x : groupsID){
+                    if(database.verifyGroupExists(x))
+                        groups.add(database.getGroup(x));
+                    else{   
+                        groupManager.deleteInvitation(database.getGroup(x), user);   // Group was deleted by admin after invitation was sent to user
+                        user = database.getProfile(user.getAccountID());
+                        groupInvitations = user.getGroupInvitations();  // Update the new group invitations
                     }
-                    if(!likeStatus)
-                        System.out.println("1 - Like");
-                    System.out.println("2 - View likes");
-                    System.out.println("3 - Comment");
-                    System.out.println("4 - View comments");
-                    if(i!=0)
-                        System.out.println("5 - Back");
-                    if(user.getUsername().equals(u1.getUsername()) || isAdmin){
-                        System.out.println("6 - Delete post");
-                        // Check if user is viewing his own page or other users page
-                        System.out.println("-1 - Back to posts tab");
-                    }else
-                        System.out.println("-1 - Back to main page");
+                }
+
+                System.out.println("<" + groupInvitations.size() + " invitations>");
+                if(groupInvitations.size()==0)
                     System.out.println("*************************");
-                    choice = sc.nextInt();
+                else
+                    System.out.println("-------------------------");
+                System.out.println("0 - Back");
+                for(int i=0; i<groups.size(); i++){
+                    System.out.println((i+1) + " - " + groups.get(i).getGroupName());
+                }
+                System.out.println("*************************");
+                choice = sc.nextInt();
+                sc.nextLine();
+                System.out.println("*************************");
+                int choiceInvite = 1;
+                while(choiceInvite==1 || choiceInvite<0 || choiceInvite>3){
+                    Group group = groups.get(choice-1);
+                    System.out.println(group.getGroupName());
+                    System.out.println("-------------------------");
+                    System.out.println("Invited by:");
+                    for(String x : groupInvitations){
+                        String[] xArr = x.split(":");
+                        User invitor = database.getProfile(xArr[0]);
+                        System.out.println(invitor.getName());
+                    }
+                    System.out.println("-------------------------");
+                    System.out.println("0 - Back");
+                    System.out.println("1 - View group");
+                    System.out.println("2 - Accept invitation");
+                    System.out.println("3 - Delete invitation");
+                    System.out.println("*************************");
+                    choiceInvite = sc.nextInt();
                     sc.nextLine();
                     System.out.println("*************************");
-                    if(choice>0){
-                        switch(choice){
-                            case 1: if(likeStatus)
-                                        postManager.unlikePost(yourPosts.get(i), user);
-                                    else
-                                        postManager.likePost(yourPosts.get(i), user);
-                                    break;
-                            case 2: postManager.viewLikes(yourPosts.get(i));
-                                    break;
-                            case 3: postManager.commentPost(yourPosts.get(i), user);
-                                    break;
-                            case 4: postManager.viewComments(yourPosts.get(i));
-                                    break;
-                            case 5: if(i!=0)
-                                        i = i+2;
-                                    break;
-                            case 6: if(user.getUsername().equals(u1.getUsername())){
-                                        postManager.deletePost(yourPosts.get(i), user);
-                                        history = history.remove(yourPosts.get(i).getPostID(), history);
-                                    }else if(isAdmin){
-                                        admin.manuallyRemoveInappropriateContent(yourPosts.get(i), u1);
-                                        history = history.remove(yourPosts.get(i).getPostID(), history);
-                                    }
-                                    break;
-                        }
-                        if(choice==2 || choice==4){
-                            System.out.println("0 - Back");
-                            System.out.println("*************************");
-                            choice = sc.nextInt();
-                            sc.nextLine();
-                            System.out.println("*************************");
-                            i++;
-                        }else if(choice==6){
-                            System.out.println("Post successfully deleted");
-                            System.out.println("*************************");
-                            choice = 0;
-                        }else{
-                            i++;
-                        }
+                    switch(choiceInvite){
+                        case 1: viewGroupPage(group);
+                        case 2: groupManager.confirmInvitation(group, user);
+                        case 3: groupManager.deleteInvitation(group, user);
                     }
-                    if(choice<0)
-                        break;
                 }
             }
         }catch(InputMismatchException e){
             System.out.println("*************************");
+            System.out.println("Invalid input");
+            System.out.println("*************************");
             sc.nextLine();
-            displayPosts(u1);
+            viewInvitation(user);
         }
     }
 
@@ -966,5 +1070,4 @@ public class AccountManagement {
             displayHistory();;
         }
     }
-
 }

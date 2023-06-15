@@ -1,6 +1,8 @@
 package com.facebook.fullstackbackend.repository;
 
 import com.facebook.fullstackbackend.model.ConnectionGraph;
+import com.facebook.fullstackbackend.model.Group;
+import com.facebook.fullstackbackend.model.GroupBuilder;
 import com.facebook.fullstackbackend.model.Post;
 import com.facebook.fullstackbackend.model.PostBuilder;
 import com.facebook.fullstackbackend.model.User;
@@ -115,7 +117,7 @@ public class DatabaseSql<T> {
             conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/database", "root", "");
 
             // Insert data into userprofile table
-            pstmt = conn.prepareStatement("INSERT INTO userprofile (accountID, username, email, phoneNo, role, name, birthday, age, address, gender, status, noOfFriends, hobbies, jobs, requestList, noOfCreatedPost, noOfDeletedPost, banDuration, banStartDate) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+            pstmt = conn.prepareStatement("INSERT INTO userprofile (accountID, username, email, phoneNo, role, name, birthday, age, address, gender, status, noOfFriends, hobbies, jobs, requestList, noOfCreatedPost, noOfDeletedPost, banDuration, banStartDate, groups, groupInvitations) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
             pstmt.setString(1, user.getAccountID());
             pstmt.setString(2, user.getUsername());
             pstmt.setString(3, user.getEmail());
@@ -135,6 +137,8 @@ public class DatabaseSql<T> {
             pstmt.setInt(17, user.getNoOfDeletedPost());
             pstmt.setString(18, String.valueOf(user.getBanDuration()));
             pstmt.setString(19, user.getBanStartDate());
+            pstmt.setString(20, String.join(",", user.getGroups()));
+            pstmt.setString(21, String.join(",", user.getGroupInvitations()));
             pstmt.executeUpdate();
         } catch (Exception e) {
             e.printStackTrace();
@@ -351,6 +355,20 @@ public class DatabaseSql<T> {
                 builder.setBanDuration(rs.getString("banDuration"));
                 builder.setBanStartDate(rs.getString("banStartDate"));
 
+                String groupsStr = rs.getString("groups");
+                ArrayList<String> groups = new ArrayList<>();
+                if (groupsStr != null) {
+                    groups = new ArrayList<>(Arrays.asList(groupsStr.split(",")));
+                }
+                builder.setGroups(groups);
+
+                String groupInvitationsStr = rs.getString("groupInvitations");
+                ArrayList<String> groupInvitations = new ArrayList<>();
+                if (groupInvitationsStr != null) {
+                    groupInvitations = new ArrayList<>(Arrays.asList(groupInvitationsStr.split(",")));
+                }
+                builder.setGroupInvitations(groupInvitations);
+
                 rs.close();
                 pstmt.close();
                 conn.close();
@@ -537,7 +555,7 @@ public class DatabaseSql<T> {
         }
     }
 
-    public Post getPost(String postID){
+    public Post getPost(String postID, User user){
         Connection conn = null;
         PreparedStatement pstmt = null;
         try {
@@ -601,7 +619,7 @@ public class DatabaseSql<T> {
                 }else
                     userPosts.add(post);     // Public posts
             }
-
+            Collections.reverse(userPosts);
             return userPosts;
 
         } catch (SQLException e) {
@@ -610,6 +628,45 @@ public class DatabaseSql<T> {
             ex.printStackTrace();
         }
         System.out.println("Failed to get user posts list.");
+        return null;
+    }
+
+    public ArrayList<Post> getGroupPosts(Group group){
+        ArrayList<Post> groupPosts = new ArrayList<>();
+        Connection conn = null;
+        PreparedStatement pstmt = null;
+        try {
+            // Establish connection
+            conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/database", "root", "");
+
+            // Read from useraccount table
+            for(int i=0; i<group.getNoOfCreatedPost(); i++){
+                pstmt = conn.prepareStatement("SELECT * FROM post WHERE postID = ?");
+                pstmt.setString(1, group.getGroupID()+i);
+                ResultSet rs = pstmt.executeQuery();
+
+                if(rs.next()) {
+                    PostBuilder postBuilder = new PostBuilder();
+                    postBuilder.setPostID(rs.getString("postID"));
+                    postBuilder.setUserID(rs.getString("userID"));
+                    postBuilder.setStatus(rs.getString("status"));
+                    postBuilder.setContent(rs.getString("content"));
+                    postBuilder.setLikes(rs.getInt("likes"));
+                    postBuilder.setComments(rs.getInt("comments"));
+                    postBuilder.setPostTime(rs.getString("postTime"));
+                    Post post = postBuilder.build();
+                    groupPosts.add(post);
+                }
+            }
+            Collections.reverse(groupPosts);
+            return groupPosts;
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+        System.out.println("Failed to get group posts list.");
         return null;
     }
 
@@ -698,6 +755,167 @@ public class DatabaseSql<T> {
         } catch (SQLException e) {
             e.printStackTrace();
         }
+    }
+
+    public void createGroup(Group group){
+        Connection conn = null;
+        PreparedStatement pstmt = null;
+        try {
+            // Establish connection
+            conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/database", "root", "");
+
+            // Insert data into post table
+            pstmt = conn.prepareStatement("INSERT INTO group (groupID, groupName, adminID, members, noOfMembers, noOfCreatedPost, noOfDeletedPost, dateOfCreation) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
+            pstmt.setString(1, group.getGroupID());
+            pstmt.setString(2, group.getGroupName());
+            pstmt.setString(3, group.getAdminID());
+            pstmt.setString(4, String.join(",", group.getMembers()));
+            pstmt.setInt(5, group.getNoOfMembers());
+            pstmt.setInt(6, group.getNoOfCreatedPost());
+            pstmt.setInt(7, group.getNoOfDeletedPost());
+            pstmt.setString(8, group.getDateOfCreation());
+            pstmt.executeUpdate();
+
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        } finally {
+            try {
+                if (pstmt != null) {
+                    pstmt.close();
+                }
+                if (conn != null) {
+                    conn.close();
+                }
+            } catch (SQLException ex) {
+                ex.printStackTrace();
+            }
+        }
+    }
+
+    public void updateGroup(Group group, String fieldName, T newValue){
+        Connection conn = null;
+        PreparedStatement pstmt = null;
+        String groupID = group.getGroupID();
+        
+        try {
+            // Establish connection
+            conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/database", "root", "");
+
+            // Update userprofile table
+            pstmt = conn.prepareStatement("UPDATE group SET " + fieldName + "=? WHERE groupID=?");
+            if (newValue instanceof String) 
+                pstmt.setString(1, (String) newValue); // Set as String
+            else if (newValue instanceof Integer) 
+                pstmt.setInt(1, (Integer) newValue); // Set as Integer
+            pstmt.setString(2, groupID);
+            pstmt.executeUpdate();
+            
+            conn.close();
+            pstmt.close();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void deleteGroup(Group group){
+        Connection conn = null;
+        PreparedStatement pstmt = null;
+        try {
+            // Establish connection
+            conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/database", "root", "");
+    
+            // Delete from post table
+            pstmt = conn.prepareStatement("DELETE FROM group WHERE groupID = ?");
+            pstmt.setString(1, group.getGroupID());
+            pstmt.executeUpdate();
+            
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            try {
+                if (pstmt != null) {
+                    pstmt.close();
+                }
+                if (conn != null) {
+                    conn.close();
+                }
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    public Group getGroup(String groupID){
+        Connection conn = null;
+        PreparedStatement pstmt = null;
+        try {
+            // Establish connection
+            conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/database", "root", "");
+
+            // Read from useraccount table
+            pstmt = conn.prepareStatement("SELECT * FROM group WHERE groupID = ?");
+            pstmt.setString(1, groupID);
+            ResultSet rs = pstmt.executeQuery();
+
+            GroupBuilder groupBuilder = new GroupBuilder();
+            if(rs.next()) {
+                groupBuilder.setGroupID(rs.getString("groupID"));
+                groupBuilder.setGroupName(rs.getString("groupName"));
+                groupBuilder.setAdminID(rs.getString("adminID"));
+
+                String membersStr = rs.getString("members");
+                ArrayList<String> members = new ArrayList<>();
+                if (membersStr != null) {
+                    members = new ArrayList<>(Arrays.asList(membersStr.split(",")));
+                }
+                groupBuilder.setMembers(members);
+
+                groupBuilder.setNoOfMembers(rs.getInt("noOfMembers"));
+                groupBuilder.setNoOfCreatedPost(rs.getInt("noOfCreatedPost"));
+                groupBuilder.setNoOfDeletedPost(rs.getInt("noOfDeletedPost"));
+                groupBuilder.setDateOfCreation(rs.getString("dateOfCreation"));
+            }
+
+            return groupBuilder.build();
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+        System.out.println("Failed to get group.");
+        return null;
+    }
+
+    public ArrayList<Group> getUserGroup(User u1){
+        ArrayList<Group> userGroups = new ArrayList<>();
+        Connection conn = null;
+        PreparedStatement pstmt = null;
+        try {
+            // Establish connection
+            conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/database", "root", "");
+
+            // Read from useraccount table
+            pstmt = conn.prepareStatement("SELECT * FROM userprofile WHERE accountID = ?");
+            pstmt.setString(1, u1.getAccountID());
+            ResultSet rs = pstmt.executeQuery();
+
+            while(rs.next()) {
+                String groupsStr = rs.getString("groups");
+                String[] groups = groupsStr.split(",");
+                for(String x : groups)
+                    userGroups.add(getGroup(x));
+            }
+
+            return userGroups;
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+        System.out.println("Failed to get user's groups.");
+        return null;
     }
 
     public String hashPassword(String password) {
@@ -850,16 +1068,16 @@ public class DatabaseSql<T> {
         return true;
     }
 
-    public int generateAccountID() {
+    public String generateID(String tableName, String fieldName) {
         int temp = rand.nextInt(100000);
         try {
             Connection conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/database", "root", "");
-            PreparedStatement pstmt = conn.prepareStatement("SELECT accountID FROM useraccount");
+            PreparedStatement pstmt = conn.prepareStatement("SELECT " + fieldName + " FROM " + tableName);
             ResultSet rs = pstmt.executeQuery();
     
             Set<Integer> accountIDs = new HashSet<>();
             while (rs.next()) {
-                int storedAccountID = rs.getInt("accountID");
+                int storedAccountID = rs.getInt(fieldName);
                 accountIDs.add(storedAccountID);
             }
     
@@ -871,7 +1089,7 @@ public class DatabaseSql<T> {
         } catch (SQLException e) {
             e.printStackTrace();
         }
-        return temp;
+        return String.valueOf(temp);
     }
 
     public boolean privacy(User user, User u1, ConnectionGraph<String> graph){
@@ -891,6 +1109,28 @@ public class DatabaseSql<T> {
             // Read from userprofile table
             pstmt = conn.prepareStatement("SELECT * FROM post WHERE postID = ?");
             pstmt.setString(1, post.getPostID());
+            ResultSet rs = pstmt.executeQuery();
+
+            return rs.next();
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+        return false;
+    }
+
+    public boolean verifyGroupExists(String groupID){
+        Connection conn = null;
+        PreparedStatement pstmt = null;
+        try {
+            // Establish connection
+            conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/database", "root", "");
+
+            // Read from userprofile table
+            pstmt = conn.prepareStatement("SELECT * FROM group WHERE groupID = ?");
+            pstmt.setString(1, groupID);
             ResultSet rs = pstmt.executeQuery();
 
             return rs.next();

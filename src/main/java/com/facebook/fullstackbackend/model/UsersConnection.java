@@ -23,6 +23,7 @@ public class UsersConnection {
         System.out.println("-------------------------");
         System.out.println("Basic info");
         System.out.println("-------------------------");
+        System.out.println("Username: " + user.getUsername());
         System.out.println("Gender: " + user.getGender());
         System.out.println("Birthday: " + user.getBirthday());
         System.out.println("Age: " + user.getAge());
@@ -51,6 +52,7 @@ public class UsersConnection {
         while(choice>0){
             System.out.println("Edit Account");
             System.out.println("-------------------------");
+            System.out.println("0 - Back");
             System.out.println("1 - Password");
             System.out.println("2 - Name");
             System.out.println("3 - Birthday");
@@ -59,7 +61,6 @@ public class UsersConnection {
             System.out.println("6 - Relationship status");
             System.out.println("7 - Hobby");
             System.out.println("8 - Jobs");
-            System.out.println("0 - Exit");
             System.out.println("*************************");
             choice = sc.nextInt();
             sc.nextLine();
@@ -193,6 +194,8 @@ public class UsersConnection {
         database.updateUserProfile(sender, "noOfFriends", sender.getNoOfFriends());
         database.updateUserProfile(receiver, "noOfFriends", receiver.getNoOfFriends());
 
+        // Remove friend request from receiver's request list
+        cancelRequest(sender, receiver);
         return graph;
     }
 
