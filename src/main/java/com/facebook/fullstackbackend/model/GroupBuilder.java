@@ -106,6 +106,7 @@ public class GroupBuilder {
     public Group editGroupName(Group group){
         System.out.println("Current group name: " + group.getGroupName());
         System.out.print("Change group name to: ");
+        System.out.println("*************************");
         String groupName = sc.nextLine();
 
         // Update group object

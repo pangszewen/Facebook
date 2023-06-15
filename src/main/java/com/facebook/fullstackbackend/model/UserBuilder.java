@@ -476,7 +476,7 @@ public class UserBuilder {
         Period difference = Period.between(startDate, LocalDate.now());
         if(difference.getDays()>duration.getDays()){
             user.setBanDuration("P0Y0M0D");
-            user.setBanStartDate(null);
+            user.setBanStartDate("");
             database.updateUserProfile(user, "banDuration", user.getBanDuration());
             database.updateUserProfile(user, "banStartDate", user.getBanStartDate());
             return false;

@@ -281,7 +281,7 @@ public class AccountManagement {
                                 sc.nextLine();
                                 System.out.println("*************************");
                                 switch(choiceGroup){
-                                    case 1 -> displayGroups(user);
+                                    case 1 -> user = displayGroups(user);
                                     case 2 -> displayInvitation();
                                     case 3 -> searchGroups();
                                     case 4 -> user = groupManager.createGroup(user);
@@ -333,15 +333,16 @@ public class AccountManagement {
                 System.out.println("1 - Posts");
                 System.out.println("2 - About");
                 System.out.println("3 - Friends");
+                System.out.println("4 - Groups");
                 if(isAdmin)
-                    System.out.println("4 - Admin authorities");
+                    System.out.println("5 - Admin authorities");
                 System.out.println("-------------------------");
                 if(isFriend)
-                    System.out.println("5 - Remove friend");    // if they are already friends
+                    System.out.println("6 - Remove friend");    // if they are already friends
                 else if(statusRequest = connection.checkRequest(u1, user)){
                     System.out.println(u1.getName() + " has requested to be your friend");
-                    System.out.println("5 - Confirm request");  // if the searched user have sent a friend request to the user
-                    System.out.println("6 - Delete request");
+                    System.out.println("6 - Confirm request");  // if the searched user have sent a friend request to the user
+                    System.out.println("7 - Delete request");
                     isFriend=true;
                 }else
                     statusRequest = connection.checkRequest(user, u1);
@@ -349,9 +350,9 @@ public class AccountManagement {
                 if(u1.getUsername() != user.getUsername()){
                     if(!isFriend){
                         if(statusRequest)
-                            System.out.println("5 - Cancel friend request");
+                            System.out.println("6 - Cancel friend request");
                         else
-                            System.out.println("5 - Add friend");
+                            System.out.println("6 - Add friend");
                     }
                 }
 
@@ -393,8 +394,26 @@ public class AccountManagement {
                                 }
                             }
                             break;
+
+                    case 4: int choiceGroup = 1;
+                            while(choiceGroup>0){
+                                System.out.println("<" + u1.getGroups().size() + " groups>");
+                                System.out.println("-------------------------");
+                                System.out.println("0 - Back");
+                                System.out.println("1 - " + u1.getName() + "'s groups");
+                                System.out.println("2 - Search group");
+                                System.out.println("*************************");
+                                choiceGroup = sc.nextInt();
+                                sc.nextLine();
+                                System.out.println("*************************");
+                                switch(choiceGroup){
+                                    case 1 -> u1 = displayGroups(u1);
+                                    case 2 -> searchGroups();
+                                }
+                            }
+                            break;
                     
-                    case 4: if(isAdmin){
+                    case 5: if(isAdmin){
                                 int choiceAdmin = 1;
                                 while(choiceAdmin>0){
                                     System.out.println("Admin");
@@ -423,7 +442,7 @@ public class AccountManagement {
                                 }
                             }
 
-                    case 5: if(isFriend&&!statusRequest)        // user remove friend
+                    case 6: if(isFriend&&!statusRequest)        // user remove friend
                                 connection.removeFriend(user, u1, graph);
                             else if(isFriend&&statusRequest)    // user confirm friend request
                                 graph = connection.confirmRequest(user, u1, graph);
@@ -433,7 +452,7 @@ public class AccountManagement {
                                 connection.cancelRequest(user, u1);
                             break;
 
-                    case 6: connection.cancelRequest(u1, user); // user delete friend request sent by searched user
+                    case 7: connection.cancelRequest(u1, user); // user delete friend request sent by searched user
                             break;
                 }
             }
@@ -1053,6 +1072,18 @@ public class AccountManagement {
     public void displayRecommendedUsers(){
         try{
             ArrayList<User> recomUser = connection.recommendedUser(user, graph);
+            if(recomUser.size()==0){
+                int choice = 1;
+                while(choice!=0){
+                    System.out.println("No more recommendations");
+                    System.out.println("-------------------------");
+                    System.out.println("0 - Back");
+                    System.out.println("*************************");
+                    choice = sc.nextInt();
+                    sc.nextLine();
+                    System.out.println("*************************");
+                }
+            }
             for(int i=0; i<recomUser.size(); i++){
                 int choice = 4;
                 while(choice<-1 || choice>3){
@@ -1117,16 +1148,15 @@ public class AccountManagement {
         }
     }
 
-    public void displayGroups(User u1){
+    public User displayGroups(User u1){
         try{
-            ArrayList<String> groupsID = u1.getGroups();
-            ArrayList<Group> groups = new ArrayList<>();
-            for(String x : groupsID){
-                System.out.println(x);
-                groups.add(database.getGroup(x));
-            }
             int choice = 1;
             while(choice!=0){
+                ArrayList<String> groupsID = u1.getGroups();
+                ArrayList<Group> groups = new ArrayList<>();
+                for(String x : groupsID){
+                    groups.add(database.getGroup(x));
+                }
                 System.out.println("<" + groupsID.size() + " groups>");
                 System.out.println("-------------------------");
                 System.out.println("0 - Back");
@@ -1139,7 +1169,9 @@ public class AccountManagement {
                 System.out.println("*************************");
                 if(choice>0 && choice<=groups.size())
                     viewGroupPage(groups.get(choice-1));
+                u1 = database.getProfile(u1.getAccountID());  // Update user object
             }
+            return u1;
         }catch(InputMismatchException e){
             System.out.println("*************************");
             System.out.println("Invalid input");
@@ -1147,6 +1179,8 @@ public class AccountManagement {
             sc.nextLine();
             displayGroups(u1);
         }
+        System.out.println("Failed to display groups");
+        return u1;
     }
 
     public void displayMembers(Group group, User user){
@@ -1200,20 +1234,22 @@ public class AccountManagement {
                     if(!groupsID.contains(xArr[1]))
                         groupsID.add(xArr[1]);
 
-                    // Check if inviter is still a member of the group
-                    User inviter = database.getProfile(xArr[0]);
-                    Group group = database.getGroup(xArr[1]);
-                    if(!groupManager.isMember(group, inviter)){     // If not, the invitation will be removed
-                        groupInvitations.remove(i);
-                        user.setGroupInvitations(groupInvitations);
-                        database.updateUserProfile(user, "groupInvitations", String.join(",", user.getGroupInvitations()));
+                    if(database.verifyGroupExists(xArr[1])){
+                        // Check if inviter is still a member of the group
+                        User inviter = database.getProfile(xArr[0]);
+                        Group group = database.getGroup(xArr[1]);
+                        if(!groupManager.isMember(group, inviter)){     // If not, the invitation will be removed
+                            groupInvitations.remove(i);
+                            user.setGroupInvitations(groupInvitations);
+                            database.updateUserProfile(user, "groupInvitations", String.join(",", user.getGroupInvitations()));
+                        }
                     }
                 }
                 for(String x : groupsID){
                     if(database.verifyGroupExists(x))
                         groups.add(database.getGroup(x));
                     else{   
-                        groupManager.deleteInvitation(database.getGroup(x), user);   // Group was deleted by admin after invitation was sent to user
+                        groupManager.deleteInvitation(x, user);   // Group was deleted by admin after invitation was sent to user
                         user = database.getProfile(user.getAccountID());
                         groupInvitations = user.getGroupInvitations();  // Update the new group invitations
                     }
@@ -1254,7 +1290,7 @@ public class AccountManagement {
                     switch(choiceInvite){
                         case 1 -> viewGroupPage(group);
                         case 2 -> groupManager.confirmInvitation(group, user);
-                        case 3 -> groupManager.deleteInvitation(group, user);
+                        case 3 -> groupManager.deleteInvitation(group.getGroupID(), user);
                     }
                 }
             }

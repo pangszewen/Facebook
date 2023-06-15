@@ -89,6 +89,7 @@ public class Admin {
         try{
             int choice = 2;
             while(choice>0){
+                choice = 2;     // Initialization
                 boolean status = false;
                 ArrayList<String> prohibitedWords = database.getProhibitedWords();
                 displayProhibitedWord(prohibitedWords);

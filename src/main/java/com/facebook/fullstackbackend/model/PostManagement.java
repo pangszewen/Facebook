@@ -158,7 +158,8 @@ public class PostManagement {
     public Post commentPost(Post post, User user){
         try{
             int choice = 3;
-            while(choice>2){
+            while(choice>1){
+                choice = 3;     // Initialization
                 StringBuilder strBuilder = new StringBuilder();
                 System.out.println("Write your comment.");
                 System.out.println("(Enter \"/end\" to end your comment)");

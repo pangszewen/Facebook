@@ -875,7 +875,7 @@ public class DatabaseSql<T> {
                 ArrayList<String> groups = member.getGroups();
                 groups.remove(group.getGroupID());
                 member.setGroups(groups);
-                pstmt = conn.prepareStatement("UPDATE userprofile SET group = ? WHERE userID = ?");
+                pstmt = conn.prepareStatement("UPDATE userprofile SET groups = ? WHERE accountID = ?");
                 pstmt.setString(1, String.join(",", member.getGroups()));
                 pstmt.setString(2, member.getAccountID());
                 pstmt.executeUpdate();

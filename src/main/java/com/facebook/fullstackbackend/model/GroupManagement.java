@@ -335,7 +335,7 @@ public class GroupManagement {
         user.setGroups(group.getGroupID());
         database.updateUserProfile(user, "groups", String.join(",", user.getGroups()));
 
-        deleteInvitation(group, user);
+        deleteInvitation(group.getGroupID(), user);
         return group;
     }
 
@@ -396,12 +396,11 @@ public class GroupManagement {
         return invitee;
     }
 
-    public void deleteInvitation(Group group, User invitee){
+    public void deleteInvitation(String groupID, User invitee){
         ArrayList<String> groupInvitations = invitee.getGroupInvitations();
         for(int i=0; i<groupInvitations.size(); i++){
-            System.out.println(groupInvitations.get(i));
             String[] xArr = groupInvitations.get(i).split(":");
-            if(xArr[1].equals(group.getGroupID())){
+            if(xArr[1].equals(groupID)){
                 groupInvitations.remove(i);
                 database.updateUserProfile(invitee, "groupInvitations", String.join(",", groupInvitations));
             }
