@@ -5,8 +5,6 @@ import java.util.Scanner;
 
 import com.facebook.fullstackbackend.repository.DatabaseSql;
 
-import ch.qos.logback.core.joran.conditional.ElseAction;
-
 public class LinkedList<E>{
     Scanner sc = new Scanner(System.in);
     PostManagement postManager = new PostManagement();
