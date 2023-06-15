@@ -12,7 +12,7 @@ public class PostManagement {
     Admin admin = new Admin();
 
     // Create new user post
-    public void createUserPost(User user){
+    public User createUserPost(User user){
         try{
             PostBuilder postBuilder = new PostBuilder(user);
             StringBuilder strBuilder = new StringBuilder();
@@ -60,6 +60,7 @@ public class PostManagement {
             }
 
             autoRemoveInappropriateContent(post);
+            return user;
         }catch(InputMismatchException e){
             System.out.println("*************************");
             System.out.println("Invalid input");
@@ -67,10 +68,12 @@ public class PostManagement {
             sc.nextLine();
             createUserPost(user);
         }
+        System.out.println("Failed to create user post");
+        return user;
     }
 
     // Create new group post (not included into the noOfCreatedPost of user)
-    public void createGroupPost(Group group, User user){
+    public Group createGroupPost(Group group, User user){
         try{
             PostBuilder postBuilder = new PostBuilder(group, user);
             StringBuilder strBuilder = new StringBuilder();
@@ -101,10 +104,11 @@ public class PostManagement {
                 database.uploadPost(post); 
                 group.setNoOfCreatedPost(group.getNoOfCreatedPost()+1);
                 DatabaseSql<Integer> databaseInt = new DatabaseSql<>();
-                databaseInt.updateGroup(group, "noOfCreatedPost", user.getNoOfCreatedPost());
+                databaseInt.updateGroup(group, "noOfCreatedPost", group.getNoOfCreatedPost());
             }
 
             autoRemoveInappropriateContent(post);
+            return group;
         }catch(InputMismatchException e){
             System.out.println("*************************");
             System.out.println("Invalid input");
@@ -112,6 +116,8 @@ public class PostManagement {
             sc.nextLine();
             createGroupPost(group, user);
         }
+        System.out.println("Failed to create group post");
+        return group;
     }
 
     // Delete existing user post
@@ -152,7 +158,7 @@ public class PostManagement {
     public Post commentPost(Post post, User user){
         try{
             int choice = 3;
-            while(choice!=0){
+            while(choice>2){
                 StringBuilder strBuilder = new StringBuilder();
                 System.out.println("Write your comment.");
                 System.out.println("(Enter \"/end\" to end your comment)");
@@ -196,7 +202,12 @@ public class PostManagement {
     public void viewPost(Post post){
         User user = database.getProfile(post.getUserID());
         System.out.println("\u001B[1m" + user.getName() + "\u001B[0m");     // Bold text
-        System.out.println("<" + String.valueOf(post.getStatus()).toLowerCase() + ">");
+        if(post.getStatus().equals(Post.Status.GROUP)){
+            String[] arr = post.getPostID().split("G");
+            Group group = database.getGroup(arr[0]);
+            System.out.println("<" + group.getGroupName() + ">");
+        }else
+            System.out.println("<" + String.valueOf(post.getStatus()).toLowerCase() + ">");
         System.out.println();
         System.out.println(post.getContent());
         System.out.println();

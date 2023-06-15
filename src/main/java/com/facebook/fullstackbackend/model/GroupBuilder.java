@@ -12,7 +12,7 @@ public class GroupBuilder {
     public String groupID;
     public String groupName;
     public String adminID;
-    public ArrayList<String> members;
+    public ArrayList<String> members = new ArrayList<>();
     public int noOfMembers;
     public int noOfCreatedPost;
     public int noOfDeletedPost;
@@ -30,7 +30,7 @@ public class GroupBuilder {
     }
 
     public GroupBuilder(User creator){
-        this.groupID = "G" + database.generateID("group", "groupID");
+        this.groupID = database.generateID("groups", "groupID");
         this.groupName = null;
         this.adminID = creator.getAccountID();
         this.members.add(adminID);
@@ -128,10 +128,13 @@ public class GroupBuilder {
 
         System.out.print("Enter the username of new admin:");
         String adminUsername = sc.nextLine();
+        System.out.println("-------------------------");
         while(!membersUsername.contains(adminUsername)){
             System.out.println("No such member");
+            System.out.println("*************************");
             System.out.print("Enter the username of new admin:");
             adminUsername = sc.nextLine();
+            System.out.println("-------------------------");
         }
         User admin = database.getProfile(adminUsername);
 

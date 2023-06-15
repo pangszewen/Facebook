@@ -34,8 +34,8 @@ public class UserBuilder {
     public int noOfDeletedPost;
     public String banDuration;
     public String banStartDate;
-    public ArrayList<String> groups;
-    public ArrayList<String> groupInvitations;
+    public ArrayList<String> groups = new ArrayList<>();
+    public ArrayList<String> groupInvitations = new ArrayList<>();
     
     public UserBuilder(){
         this.accountID = null;
@@ -48,8 +48,6 @@ public class UserBuilder {
         this.noOfDeletedPost = 0;
         this.banDuration = "P0Y0M0D";
         this.banStartDate = "";
-        this.groups = new ArrayList<>();
-        this.groupInvitations = new ArrayList<>();
     }
 
     public UserBuilder(String accountID, String username, String email, String phoneNo, String password, String role){
@@ -63,8 +61,6 @@ public class UserBuilder {
         this.noOfDeletedPost = 0;
         this.banDuration = "P0Y0M0D";
         this.banStartDate = "";
-        this.groups = new ArrayList<>();
-        this.groupInvitations = new ArrayList<>();
     }
 
     public void setAccountID(){
@@ -505,7 +501,7 @@ public class UserBuilder {
             }
             System.out.println();
             System.out.println("You are banned by admin for " + banDuration + " since " + user.getBanStartDate());
-            System.out.println("Remaining banned time: " + getRemainingBannedTime(user));
+            System.out.println("Remaining banned time: " + getRemainingBannedTime(user, endDate));
             System.out.println("You can start using Facebook again on " + endDate);
             System.out.println();
             return true;
@@ -513,13 +509,12 @@ public class UserBuilder {
     }
 
     //To check the remaining banned time of any user
-    public String getRemainingBannedTime(User user) {
+    public String getRemainingBannedTime(User user, LocalDate endDate) {
             LocalDate currentDate = LocalDate.now();
-            Period banDuration = Period.parse(user.getBanDuration());
-            Period difference = Period.between(currentDate, LocalDate.parse(user.getBanStartDate()));
-            int year = banDuration.getYears()-difference.getYears();
-            int month = banDuration.getMonths()-difference.getMonths();
-            int day = banDuration.getDays()-difference.getDays();
+            Period difference = Period.between(currentDate, endDate);
+            int year = difference.getYears();
+            int month = difference.getMonths();
+            int day = difference.getDays();
             String str = "";
             if(year!=0) 
                 str += year + " year ";

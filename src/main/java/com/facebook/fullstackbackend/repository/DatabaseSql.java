@@ -137,8 +137,10 @@ public class DatabaseSql<T> {
             pstmt.setInt(17, user.getNoOfDeletedPost());
             pstmt.setString(18, String.valueOf(user.getBanDuration()));
             pstmt.setString(19, user.getBanStartDate());
-            pstmt.setString(20, String.join(",", user.getGroups()));
-            pstmt.setString(21, String.join(",", user.getGroupInvitations()));
+            if(user.getGroups().size()!=0)
+                pstmt.setString(20, String.join(",", user.getGroups()));
+            if(user.getGroupInvitations().size()!=0)
+                pstmt.setString(21, String.join(",", user.getGroupInvitations()));
             pstmt.executeUpdate();
         } catch (Exception e) {
             e.printStackTrace();
@@ -357,14 +359,14 @@ public class DatabaseSql<T> {
 
                 String groupsStr = rs.getString("groups");
                 ArrayList<String> groups = new ArrayList<>();
-                if (groupsStr != null) {
+                if (!groupsStr.equals("")) {
                     groups = new ArrayList<>(Arrays.asList(groupsStr.split(",")));
                 }
                 builder.setGroups(groups);
 
                 String groupInvitationsStr = rs.getString("groupInvitations");
                 ArrayList<String> groupInvitations = new ArrayList<>();
-                if (groupInvitationsStr != null) {
+                if (!groupInvitationsStr.equals("")) {
                     groupInvitations = new ArrayList<>(Arrays.asList(groupInvitationsStr.split(",")));
                 }
                 builder.setGroupInvitations(groupInvitations);
@@ -417,6 +419,48 @@ public class DatabaseSql<T> {
             for (int j = 0; j < contains.size(); j++) {
                 String name = contains.get(j).getName().toLowerCase();
                 if (name.charAt(i) == emailOrPhoneNoOrUsernameOrName.charAt(i)) {
+                    tempContains.add(contains.get(j));
+                }
+            }
+            contains = new ArrayList<>(tempContains);
+            tempContains.clear();
+        }
+    
+        return contains;
+    }
+
+    // Find users with search keyword
+    public ArrayList<Group> ifContainsGroup(String groupIDorGroupName) {
+        Connection conn = null;
+        PreparedStatement pstmt = null;
+        groupIDorGroupName = groupIDorGroupName.toLowerCase();
+        ArrayList<Group> contains = new ArrayList<>();
+        ArrayList<Group> tempContains = new ArrayList<>();
+        try {
+            // Establish connection
+            conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/database", "root", "");
+    
+            // Read from userprofile table
+            pstmt = conn.prepareStatement("SELECT * FROM groups WHERE groupID = ? OR groupName LIKE ?");
+            pstmt.setString(1, groupIDorGroupName);
+            pstmt.setString(2, "%" + groupIDorGroupName + "%");
+            ResultSet rs = pstmt.executeQuery();
+                    
+            while (rs.next()) {
+                Group group = getGroup(rs.getString("groupID"));
+                contains.add(group);
+            }
+            
+            rs.close();
+            conn.close();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    
+        for (int i = 0; i < groupIDorGroupName.length(); i++) {
+            for (int j = 0; j < contains.size(); j++) {
+                String name = contains.get(j).getGroupName().toLowerCase();
+                if (name.charAt(i) == groupIDorGroupName.charAt(i)) {
                     tempContains.add(contains.get(j));
                 }
             }
@@ -555,7 +599,7 @@ public class DatabaseSql<T> {
         }
     }
 
-    public Post getPost(String postID, User user){
+    public Post getPost(String postID){
         Connection conn = null;
         PreparedStatement pstmt = null;
         try {
@@ -642,7 +686,7 @@ public class DatabaseSql<T> {
             // Read from useraccount table
             for(int i=0; i<group.getNoOfCreatedPost(); i++){
                 pstmt = conn.prepareStatement("SELECT * FROM post WHERE postID = ?");
-                pstmt.setString(1, group.getGroupID()+i);
+                pstmt.setString(1, group.getGroupID()+"G"+i);
                 ResultSet rs = pstmt.executeQuery();
 
                 if(rs.next()) {
@@ -765,7 +809,7 @@ public class DatabaseSql<T> {
             conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/database", "root", "");
 
             // Insert data into post table
-            pstmt = conn.prepareStatement("INSERT INTO group (groupID, groupName, adminID, members, noOfMembers, noOfCreatedPost, noOfDeletedPost, dateOfCreation) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
+            pstmt = conn.prepareStatement("INSERT INTO groups (groupID, groupName, adminID, members, noOfMembers, noOfCreatedPost, noOfDeletedPost, dateOfCreation) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
             pstmt.setString(1, group.getGroupID());
             pstmt.setString(2, group.getGroupName());
             pstmt.setString(3, group.getAdminID());
@@ -802,7 +846,7 @@ public class DatabaseSql<T> {
             conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/database", "root", "");
 
             // Update userprofile table
-            pstmt = conn.prepareStatement("UPDATE group SET " + fieldName + "=? WHERE groupID=?");
+            pstmt = conn.prepareStatement("UPDATE groups SET " + fieldName + "=? WHERE groupID=?");
             if (newValue instanceof String) 
                 pstmt.setString(1, (String) newValue); // Set as String
             else if (newValue instanceof Integer) 
@@ -824,8 +868,22 @@ public class DatabaseSql<T> {
             // Establish connection
             conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/database", "root", "");
     
-            // Delete from post table
-            pstmt = conn.prepareStatement("DELETE FROM group WHERE groupID = ?");
+            // Delete group from userprofile table
+            ArrayList<String> members = group.getMembers();
+            for(int i=0; i<members.size(); i++){
+                User member = getProfile(members.get(i));
+                ArrayList<String> groups = member.getGroups();
+                groups.remove(group.getGroupID());
+                member.setGroups(groups);
+                pstmt = conn.prepareStatement("UPDATE userprofile SET group = ? WHERE userID = ?");
+                pstmt.setString(1, String.join(",", member.getGroups()));
+                pstmt.setString(2, member.getAccountID());
+                pstmt.executeUpdate();
+            }
+            pstmt.close();
+
+            // Delete from group table
+            pstmt = conn.prepareStatement("DELETE FROM groups WHERE groupID = ?");
             pstmt.setString(1, group.getGroupID());
             pstmt.executeUpdate();
             
@@ -853,12 +911,12 @@ public class DatabaseSql<T> {
             conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/database", "root", "");
 
             // Read from useraccount table
-            pstmt = conn.prepareStatement("SELECT * FROM group WHERE groupID = ?");
+            pstmt = conn.prepareStatement("SELECT * FROM groups WHERE groupID = ?");
             pstmt.setString(1, groupID);
             ResultSet rs = pstmt.executeQuery();
 
-            GroupBuilder groupBuilder = new GroupBuilder();
             if(rs.next()) {
+                GroupBuilder groupBuilder = new GroupBuilder();
                 groupBuilder.setGroupID(rs.getString("groupID"));
                 groupBuilder.setGroupName(rs.getString("groupName"));
                 groupBuilder.setAdminID(rs.getString("adminID"));
@@ -874,9 +932,9 @@ public class DatabaseSql<T> {
                 groupBuilder.setNoOfCreatedPost(rs.getInt("noOfCreatedPost"));
                 groupBuilder.setNoOfDeletedPost(rs.getInt("noOfDeletedPost"));
                 groupBuilder.setDateOfCreation(rs.getString("dateOfCreation"));
-            }
 
-            return groupBuilder.build();
+                return groupBuilder.build();
+            }
 
         } catch (SQLException e) {
             e.printStackTrace();
@@ -1129,7 +1187,7 @@ public class DatabaseSql<T> {
             conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/database", "root", "");
 
             // Read from userprofile table
-            pstmt = conn.prepareStatement("SELECT * FROM group WHERE groupID = ?");
+            pstmt = conn.prepareStatement("SELECT * FROM groups WHERE groupID = ?");
             pstmt.setString(1, groupID);
             ResultSet rs = pstmt.executeQuery();
 

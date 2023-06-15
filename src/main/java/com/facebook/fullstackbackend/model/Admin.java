@@ -75,35 +75,6 @@ public class Admin {
         }
     }
 
-    //To check the remaining banned time of any user
-    public String getRemainingBannedTime(User user) {
-        if(builder.isBanned(user)){
-            LocalDate currentDate = LocalDate.now();
-            Period banDuration = Period.parse(user.getBanDuration());
-            Period difference = Period.between(currentDate, LocalDate.parse(user.getBanStartDate()));
-            int year = banDuration.getYears()-difference.getYears();
-            int month = banDuration.getMonths()-difference.getMonths();
-            int day = banDuration.getDays()-difference.getDays();
-            String str = "";
-            if(year!=0)
-                str += year + "year ";
-            if(month!=0)
-                str += month;
-                if(month>1)
-                    str += "months ";
-                else
-                    str += "month ";
-            if(day!=0)
-                str += day;
-                if(day>1)
-                    str += "days";
-                else
-                    str += "day";
-            return str;
-        }else
-            return null;
-    }
-
     // Content is manually removed by the admin
     public void manuallyRemoveInappropriateContent(Post post, User user){        
         database.deletePost(post);

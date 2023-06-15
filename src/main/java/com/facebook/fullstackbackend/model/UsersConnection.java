@@ -2,6 +2,7 @@ package com.facebook.fullstackbackend.model;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.InputMismatchException;
 import java.util.Scanner;
 
 import com.facebook.fullstackbackend.repository.DatabaseSql;
@@ -252,5 +253,54 @@ public class UsersConnection {
             System.out.println("-------------------------");
         }
         return friends;
+    }
+
+    public ConnectionGraph<String> displayRequest(User user, ConnectionGraph<String> graph){
+        try{
+            int choice = 1;
+            while(choice>0){
+                ArrayList<User> requestList = database.getRequestList(user);
+                System.out.println("<" + requestList.size() + " friend requests>");
+                System.out.println("-------------------------");
+                System.out.println("0 - Back");
+                if(requestList.size()==0){
+                    System.out.println("*************************");
+                    choice = sc.nextInt();
+                    System.out.println("*************************");
+                }
+                for(int i=0; i<requestList.size(); i++){
+                    System.out.println(requestList.get(i).getName());
+                    System.out.println("(" + getTotalMutual(user, requestList.get(i), graph) + " mutuals)");
+                    System.out.println("-------------------------");
+                    System.out.println("0 - Next");
+                    System.out.println("1 - Confirm request");
+                    System.out.println("2 - Delete request");
+                    System.out.println("-1 - Back to Friends page");
+                    System.out.println("*************************");
+                    choice = sc.nextInt();
+                    System.out.println("*************************");
+
+                    if(choice<0)
+                        break;
+
+                    switch(choice){
+                        case 0: continue;
+                        case 1: graph = confirmRequest(requestList.get(i), user, graph);
+                                break;
+                        case 2: cancelRequest(requestList.get(i), user);
+                                break;
+
+                    }
+                }
+            }
+            return graph;
+        }catch(InputMismatchException e ){
+            System.out.println("*************************");
+            System.out.println("Invalid input");
+            System.out.println("*************************");
+            sc.nextLine();
+            displayRequest(user, graph);
+        }
+        return graph;
     }
 }

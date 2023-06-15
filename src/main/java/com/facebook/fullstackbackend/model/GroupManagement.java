@@ -13,7 +13,7 @@ public class GroupManagement {
     DatabaseSql<Integer> databaseInt = new DatabaseSql<>();
     PostManagement postManager = new PostManagement();
 
-    public void createGroup(User creator){
+    public User createGroup(User creator){
         try{
             GroupBuilder builder = new GroupBuilder(creator);
             System.out.println("Create Group");
@@ -29,6 +29,7 @@ public class GroupManagement {
                 System.out.println("2 - Invite member");
                 System.out.println("*************************");
                 choice = sc.nextInt();
+                sc.nextLine();
                 System.out.println("*************************");
                 switch(choice){
                     case 2: inviteMember(group, creator);
@@ -40,6 +41,7 @@ public class GroupManagement {
                 System.out.println("1 - Create group");
                 System.out.println("*************************");
                 choice = sc.nextInt();
+                sc.nextLine();
                 System.out.println("*************************");
             }
             if(choice==1){
@@ -49,6 +51,8 @@ public class GroupManagement {
                 creator.setGroups(group.getGroupID());
                 database.updateUserProfile(creator, "groups", String.join(",", creator.getGroups()));
             }
+
+            return creator;
         }catch(InputMismatchException e){
             System.out.println("*************************");
             System.out.println("Invalid input");
@@ -56,6 +60,8 @@ public class GroupManagement {
             sc.nextLine();
             createGroup(creator);
         }
+        System.out.println("Failed to create group");
+        return creator;
     }
 
     public void viewGroupInfo(Group group){
@@ -80,7 +86,6 @@ public class GroupManagement {
                 System.out.println("*************************");
                 choice = sc.nextInt();
                 sc.nextLine();
-                System.out.println("*************************");
                 switch(choice){
                     case 1 -> group = groupBuilder.editGroupName(group);
                     case 2 -> group = groupBuilder.changeAdmin(group);
@@ -132,14 +137,18 @@ public class GroupManagement {
                 }
 
                 if(result.size()==0){
-                    System.out.println("No result found.");
-                    System.out.println("-------------------------");
-                    System.out.println("0 - Back");
-                    System.out.println("1 - Search again");
-                    System.out.println("*************************");
-                    choice = sc.nextInt();
-                    sc.nextLine();
-                    System.out.println("*************************");
+                    choice = 2;
+                    while(choice>1){
+                        System.out.println("No result found.");
+                        System.out.println("-------------------------");
+                        System.out.println("0 - Back");
+                        System.out.println("1 - Search again");
+                        System.out.println("-1 - Back to Friends tab");
+                        System.out.println("*************************");
+                        choice = sc.nextInt();
+                        sc.nextLine();
+                        System.out.println("*************************");
+                    }
                     if(choice == 1)
                         choice = result.size()+1;
                 }
@@ -170,7 +179,7 @@ public class GroupManagement {
                     // If choice in range, view account; else continue
                     if(choice>0 && choice<result.size()+1){
                         int choiceInvite = 1;
-                        while(choiceInvite==1){
+                        while(choiceInvite>0){
                             User u1 = result.get(choice-1);
                             System.out.println(u1.getName());
                             System.out.println("-------------------------");
@@ -188,7 +197,7 @@ public class GroupManagement {
                                     u1.setGroupInvitations(inviter, group);
                                     database.updateUserProfile(u1, "groupInvitations", String.join(",", u1.getGroupInvitations()));
                                 }else{
-                                    cancelInvitation(group, inviter, u1);
+                                    u1 = cancelInvitation(group, inviter, u1);
                                 }
                             }
                         }
@@ -237,15 +246,18 @@ public class GroupManagement {
                 }
 
                 if(result.size()==0){
-                    System.out.println("No result found.");
-                    System.out.println("-------------------------");
-                    System.out.println("0 - Back");
-                    System.out.println("1 - Search again");
-                    System.out.println("-1 - Back to Members tab");
-                    System.out.println("*************************");
-                    choice = sc.nextInt();
-                    sc.nextLine();
-                    System.out.println("*************************");
+                    choice = 2;
+                    while(choice>1){
+                        System.out.println("No result found.");
+                        System.out.println("-------------------------");
+                        System.out.println("0 - Back");
+                        System.out.println("1 - Search again");
+                        System.out.println("-1 - Back to Friends tab");
+                        System.out.println("*************************");
+                        choice = sc.nextInt();
+                        sc.nextLine();
+                        System.out.println("*************************");
+                    }
                     if(choice == 1)
                         choice = result.size()+1;
                 }
@@ -261,7 +273,6 @@ public class GroupManagement {
             
                     System.out.println("-------------------------");
                     System.out.println(result.size()+1 + " - Search again");
-                    System.out.println("-1 - Back to Members tab");
                     System.out.println("*************************");
                     // Select to view searched account
                     choice = sc.nextInt();
@@ -281,14 +292,18 @@ public class GroupManagement {
                         System.out.println("-------------------------");
                         System.out.println("0 - Back");
                         System.out.println("1 - Remove member");
-                        System.out.println("-1 - Back to Members tab");
                         System.out.println("*************************");
                         choice = sc.nextInt();
                         sc.nextLine();
                         System.out.println("*************************");
                         if(choice==1){
-                            group = leaveGroup(group, user);
-                            choice = 0;     // Break loop
+                            if(!isGroupAdmin(group, user)){
+                                group = leaveGroup(group, user);
+                                choice = 0;     // Break loop
+                            }else{
+                                System.out.println("You are an admin. You are not allowed to be removed from the group.");
+                                System.out.println("*************************");
+                            }
                         }else if(choice>1){
                             choice = 1;     // Maintain in loop
                         }
@@ -320,6 +335,7 @@ public class GroupManagement {
         user.setGroups(group.getGroupID());
         database.updateUserProfile(user, "groups", String.join(",", user.getGroups()));
 
+        deleteInvitation(group, user);
         return group;
     }
 
@@ -367,23 +383,26 @@ public class GroupManagement {
         return false;
     }
 
-    public void cancelInvitation(Group group, User inviter, User invitee){
+    public User cancelInvitation(Group group, User inviter, User invitee){
         ArrayList<String> groupInvitations = invitee.getGroupInvitations();
-        for(String x : groupInvitations){
-            String[] xArr = x.split(":");
+        for(int i=0; i<groupInvitations.size(); i++){
+            String[] xArr = groupInvitations.get(i).split(":");
             if(xArr[0].equals(inviter.getAccountID()) && xArr[1].equals(group.getGroupID())){
-                groupInvitations.remove(x);
+                groupInvitations.remove(i);
+                invitee.setGroupInvitations(groupInvitations);
                 database.updateUserProfile(invitee, "groupInvitations", String.join(",", groupInvitations));
             }
         }
+        return invitee;
     }
 
     public void deleteInvitation(Group group, User invitee){
         ArrayList<String> groupInvitations = invitee.getGroupInvitations();
-        for(String x : groupInvitations){
-            String[] xArr = x.split(":");
+        for(int i=0; i<groupInvitations.size(); i++){
+            System.out.println(groupInvitations.get(i));
+            String[] xArr = groupInvitations.get(i).split(":");
             if(xArr[1].equals(group.getGroupID())){
-                groupInvitations.remove(x);
+                groupInvitations.remove(i);
                 database.updateUserProfile(invitee, "groupInvitations", String.join(",", groupInvitations));
             }
         }
@@ -392,8 +411,6 @@ public class GroupManagement {
     public Group confirmInvitation(Group group, User invitee){
         group = joinGroup(group, invitee);
 
-        // Delete group invitations
-        deleteInvitation(group, invitee);
         return group;
     }
 }

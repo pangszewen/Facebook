@@ -23,7 +23,7 @@ public class AccountManagement {
 
     public void registration(){
         graph = new ConnectionGraph<>();
-        System.out.println("\tRegistration Form");
+        System.out.println("Registration Form");
         System.out.println("-------------------------");
 
         // Input username
@@ -205,8 +205,9 @@ public class AccountManagement {
                 System.out.println("1 - Posts");
                 System.out.println("2 - About");
                 System.out.println("3 - Friends");
+                System.out.println("4 - Groups");
                 if(isAdmin)
-                    System.out.println("4 - Admin authorities");
+                    System.out.println("5 - Admin authorities");
                 System.out.println("*************************");
                 choice = sc.nextInt();
                 sc.nextLine();
@@ -223,7 +224,7 @@ public class AccountManagement {
                                 choicePost = sc.nextInt();
                                 System.out.println("*************************");
                                 switch(choicePost){
-                                    case 1: postManager.createUserPost(user);
+                                    case 1: user = postManager.createUserPost(user);
                                             break;
                                     case 2: history = postManager.displayPosts(user, user, graph, history);
                                             break;
@@ -259,13 +260,36 @@ public class AccountManagement {
                                 System.out.println("*************************");
                                 switch(choiceFriend){
                                     case 1 -> displayFriends(user);
-                                    case 2 -> displayRequest();
+                                    case 2 -> graph = connection.displayRequest(user, graph);
                                     case 3 -> searchFriend(user);
+                                }
+                                user = database.getProfile(user.getAccountID());    // Update the user object if user accept friend requests
+                            }
+                            break;
+
+                    case 4: int choiceGroup = 1;
+                            while(choiceGroup>0){
+                                System.out.println("<" + user.getGroups().size() + " groups>");
+                                System.out.println("-------------------------");
+                                System.out.println("0 - Back");
+                                System.out.println("1 - My groups");
+                                System.out.println("2 - Group invitations");
+                                System.out.println("3 - Search group");
+                                System.out.println("4 - Create group");
+                                System.out.println("*************************");
+                                choiceGroup = sc.nextInt();
+                                sc.nextLine();
+                                System.out.println("*************************");
+                                switch(choiceGroup){
+                                    case 1 -> displayGroups(user);
+                                    case 2 -> displayInvitation();
+                                    case 3 -> searchGroups();
+                                    case 4 -> user = groupManager.createGroup(user);
                                 }
                             }
                             break;
 
-                    case 4: if(isAdmin){
+                    case 5: if(isAdmin){
                                 int choiceAdmin = 1;
                                 while(choiceAdmin>0){
                                     System.out.println("0 - Back");
@@ -353,7 +377,7 @@ public class AccountManagement {
                     case 3: int choiceFriend = 1;
                             while(choiceFriend>0){
                                 System.out.println("<" + u1.getNoOfFriends() + " friends>");
-                            System.out.println("-------------------------");
+                                System.out.println("-------------------------");
                                 System.out.println("0 - Back");
                                 System.out.println("1 - " + u1.getName() + "'s friends");
                                 System.out.println("2 - Mutual friends");
@@ -373,6 +397,8 @@ public class AccountManagement {
                     case 4: if(isAdmin){
                                 int choiceAdmin = 1;
                                 while(choiceAdmin>0){
+                                    System.out.println("Admin");
+                                    System.out.println("-------------------------");
                                     System.out.println("0 - Back");
                                     System.out.println("1 - Ban user");
                                     System.out.println("2 - Delete user");
@@ -423,9 +449,9 @@ public class AccountManagement {
     public void viewGroupPage(Group group){
         try{
             int choice = 1;
-            boolean isGroupAdmin = groupManager.isGroupAdmin(group, user);
-            boolean isGroupMember = groupManager.isMember(group, user);
             while(choice>0){
+                boolean isGroupAdmin = groupManager.isGroupAdmin(group, user);
+                boolean isGroupMember = groupManager.isMember(group, user);
                 System.out.println("\u001B[1m" + group.getGroupName() + "\u001B[0m");
                 System.out.println("-------------------------");
                 System.out.println("0 - Back");
@@ -435,10 +461,10 @@ public class AccountManagement {
                 if(isGroupAdmin)
                     System.out.println("4 - Admin authorities");
                 System.out.println("-------------------------");
-                if(isGroupMember)
-                    System.out.println("5 - Leave group");    // if user is already a member of the group
-                else if(isGroupAdmin)
-                    System.out.println("5 - Delete group");
+                if(isGroupAdmin)
+                    System.out.println("5 - Delete group");    // if user is already a member of the group
+                else if(isGroupMember)
+                    System.out.println("5 - Leave group");
                 else
                     System.out.println("5 - Join group");
 
@@ -447,7 +473,26 @@ public class AccountManagement {
                 sc.nextLine();
                 System.out.println("*************************");
                 switch(choice){
-                    case 1: postManager.displayGroupPosts(group, user, history);
+                    case 1: if(isGroupMember){
+                                int choicePost = 1;
+                                while(choicePost>0){
+                                    System.out.println("Posts");
+                                    System.out.println("-------------------------");
+                                    System.out.println("0 - Back");
+                                    System.out.println("1 - Create group post");
+                                    System.out.println("2 - Group posts");
+                                    System.out.println("*************************");
+                                    choicePost = sc.nextInt();
+                                    System.out.println("*************************");
+                                    switch(choicePost){
+                                        case 1: group = postManager.createGroupPost(group, user);
+                                                break;
+                                        case 2: history = postManager.displayGroupPosts(group, user, history);
+                                                break;
+                                    }
+                                }
+                            }else
+                                history = postManager.displayGroupPosts(group, user, history);
                             break;
 
                     case 2: int choiceAbout = 1;
@@ -471,7 +516,8 @@ public class AccountManagement {
                                 System.out.println("-------------------------");
                                 System.out.println("0 - Back");
                                 System.out.println("1 - View members");
-                                System.out.println("2 - Invite members");
+                                if(isGroupMember)
+                                    System.out.println("2 - Invite members");
                                 if(isGroupAdmin)
                                     System.out.println("3 - Remove members");
                                 System.out.println("*************************");
@@ -481,7 +527,8 @@ public class AccountManagement {
                                 switch(choiceMembers){
                                     case 1: displayMembers(group, user);
                                             break;
-                                    case 2: groupManager.inviteMember(group, user);
+                                    case 2: if(isGroupMember)
+                                                groupManager.inviteMember(group, user);
                                             break;
                                     case 3: if(isGroupAdmin)
                                                 groupManager.removeMember(group);
@@ -493,6 +540,8 @@ public class AccountManagement {
                     case 4: if(isGroupAdmin){
                                 int choiceAdmin = 1;
                                 while(choiceAdmin>0){
+                                    System.out.println("Group Admin");
+                                    System.out.println("-------------------------");
                                     System.out.println("0 - Back");
                                     System.out.println("1 - Edit group info");
                                     System.out.println("2 - Remove member");
@@ -505,7 +554,7 @@ public class AccountManagement {
                                         case 1: group = groupManager.editGroupInfo(group);
                                                 break;
                                         case 2: group = groupManager.removeMember(group);
-                                                return;
+                                                break;
                                         case 3: database.deleteGroup(group);
                                                 choiceAdmin = 0;     // Break loop
                                                 choice = 0;
@@ -513,14 +562,16 @@ public class AccountManagement {
                                     }
                                 }
                             }
+                            break;
 
-                    case 5: if(isGroupMember)
-                                group = groupManager.leaveGroup(group, user);   // If user is a group member
-                            else if(isGroupAdmin){
+                    case 5: if(isGroupAdmin){
                                 database.deleteGroup(group);    // If user is group admin
                                 choice = 0;
-                            }else
+                            }else if(isGroupMember)
+                                group = groupManager.leaveGroup(group, user);   // If user is a group member
+                            else
                                 group = groupManager.joinGroup(group, user);    // If user is not a group member
+                            break;
                 }
             }
         }catch(InputMismatchException e){
@@ -564,14 +615,18 @@ public class AccountManagement {
                 }
 
                 if(result.size()==0){
-                    System.out.println("No result found.");
-                    System.out.println("-------------------------");
-                    System.out.println("0 - Back");
-                    System.out.println("1 - Search again");
-                    System.out.println("*************************");
-                    choice = sc.nextInt();
-                    sc.nextLine();
-                    System.out.println("*************************");
+                    choice = 2;
+                    while(choice>1){
+                        System.out.println("No result found.");
+                        System.out.println("-------------------------");
+                        System.out.println("0 - Back");
+                        System.out.println("1 - Search again");
+                        System.out.println("-1 - Back to Friends tab");
+                        System.out.println("*************************");
+                        choice = sc.nextInt();
+                        sc.nextLine();
+                        System.out.println("*************************");
+                    }
                     if(choice == 1)
                         choice = result.size()+1;
                 }
@@ -591,6 +646,7 @@ public class AccountManagement {
                         count++;
                     }
                     System.out.println(result.size()+1 + " - Search again");
+                    System.out.println("-1 - Back to Friends tab");
                     System.out.println("*************************");
                     // Select to view searched account
                     choice = sc.nextInt();
@@ -609,6 +665,49 @@ public class AccountManagement {
                             viewOtherPage(result.get(choice-1));
                         else
                             viewMyPage();
+                    }
+
+                    // Update user object
+                    u1 = database.getProfile(u1.getAccountID());
+
+                    result = database.ifContains(emailOrPhoneNoOrUsernameOrName);     // ArrayList of user objects of search result
+                    usernameResult.clear();
+
+                    for(User x: result){
+                        usernameResult.add(x.getUsername());
+                    }
+                    result.clear();
+                    for(String x : usernameResult){
+                        if(graph.hasEdge(graph, u1.getUsername(), x))
+                            result.add(database.getProfile(x));
+                    }
+
+                    // Sort the names alphabetically
+                    for(int i=1; i<result.size(); i++){
+                        for(int j=0; j<i; j++){
+                            if(result.get(i).getName().compareTo(result.get(j).getName())<0){
+                                User temp = result.get(i);
+                                result.set(i, result.get(j));
+                                result.set(j, temp);
+                            }
+                        }
+                    }
+
+                    if(result.size()==0){
+                        choice = 2;
+                        while(choice>1){
+                            System.out.println("No result found.");
+                            System.out.println("-------------------------");
+                            System.out.println("0 - Back");
+                            System.out.println("1 - Search again");
+                            System.out.println("-1 - Back to Friends tab");
+                            System.out.println("*************************");
+                            choice = sc.nextInt();
+                            sc.nextLine();
+                            System.out.println("*************************");
+                        }
+                        if(choice == 1)
+                            choice = result.size()+1;
                     }
                 }
             }
@@ -645,14 +744,18 @@ public class AccountManagement {
                 }
 
                 if(result.size()==0){
-                    System.out.println("No result found.");
-                    System.out.println("-------------------------");
-                    System.out.println("0 - Back");
-                    System.out.println("1 - Search again");
-                    System.out.println("*************************");
-                    choice = sc.nextInt();
-                    sc.nextLine();
-                    System.out.println("*************************");
+                    choice = 2;
+                    while(choice>1){
+                        System.out.println("No result found.");
+                        System.out.println("-------------------------");
+                        System.out.println("0 - Back");
+                        System.out.println("1 - Search again");
+                        System.out.println("-1 - Back to Home page");
+                        System.out.println("*************************");
+                        choice = sc.nextInt();
+                        sc.nextLine();
+                        System.out.println("*************************");
+                    }
                     if(choice == 1)
                         choice = result.size()+1;
                 }
@@ -673,7 +776,7 @@ public class AccountManagement {
             
                     System.out.println("-------------------------");
                     System.out.println(result.size()+1 + " - Search again");
-                    System.out.println("-1 - Back to home page");
+                    System.out.println("-1 - Back to Home page");
                     System.out.println("*************************");
                     // Select to view searched account
                     choice = sc.nextInt();
@@ -688,7 +791,7 @@ public class AccountManagement {
 
                     // If choice in range, view account; else continue
                     if(choice>0 && choice<result.size()+1){
-                        if(result.get(choice-1).getUsername() != user.getUsername())
+                        if(!result.get(choice-1).getUsername().equals(user.getUsername()))
                             viewOtherPage(result.get(choice-1));
                         else
                             viewMyPage();
@@ -708,14 +811,18 @@ public class AccountManagement {
                     }
 
                     if(result.size()==0){
-                        System.out.println("No result found.");
-                        System.out.println("-------------------------");
-                        System.out.println("0 - Back");
-                        System.out.println("1 - Search again");
-                        System.out.println("*************************");
-                        choice = sc.nextInt();
-                        sc.nextLine();
-                        System.out.println("*************************");
+                        choice = 2;
+                        while(choice>1){
+                            System.out.println("No result found.");
+                            System.out.println("-------------------------");
+                            System.out.println("0 - Back");
+                            System.out.println("1 - Search again");
+                            System.out.println("-1 - Back to Home page");
+                            System.out.println("*************************");
+                            choice = sc.nextInt();
+                            sc.nextLine();
+                            System.out.println("*************************");
+                        }
                         if(choice == 1)
                             choice = result.size()+1;
                     }
@@ -730,44 +837,115 @@ public class AccountManagement {
         }
     }
 
-    public void displayRequest(){
+    public void searchGroups(){
         try{
-            ArrayList<User> requestList = database.getRequestList(user);
-            System.out.println("<" + requestList.size() + " friend requests>");
-            if(requestList.size()==0)
+            int choice = 1;
+            while(choice>0){
+                choice = 1;     // Initialization
+                System.out.println("Enter search keyword:");
+                String groupIDorGroupName =  sc.nextLine();
                 System.out.println("*************************");
-            else
-                System.out.println("-------------------------");
-            for(int i=0; i<requestList.size(); i++){
-                System.out.println(requestList.get(i).getName());
-                System.out.println("(" + connection.getTotalMutual(user, requestList.get(i), graph) + " mutuals)");
-                System.out.println("-------------------------");
-                System.out.println("0 - Next");
-                System.out.println("1 - Confirm request");
-                System.out.println("2 - Delete request");
-                System.out.println("-1 - Back to Friends page");
-                System.out.println("*************************");
-                int choice = sc.nextInt();
-                System.out.println("*************************");
+                ArrayList<Group> result = database.ifContainsGroup(groupIDorGroupName);     // ArrayList of user objects of search result
 
-                if(choice<0)
-                    break;
+                // Sort the names alphabetically
+                for(int i=1; i<result.size(); i++){
+                    for(int j=0; j<i; j++){
+                        if(result.get(i).getGroupName().compareTo(result.get(j).getGroupName())<0){
+                            Group temp = result.get(i);
+                            result.set(i, result.get(j));
+                            result.set(j, temp);
+                        }
+                    }
+                }
 
-                switch(choice){
-                    case 0: continue;
-                    case 1: graph = connection.confirmRequest(requestList.get(i), user, graph);
-                            break;
-                    case 2: connection.cancelRequest(requestList.get(i), user);
-                            break;
+                if(result.size()==0){
+                    choice = 2;
+                    while(choice>1){
+                        System.out.println("No result found.");
+                        System.out.println("-------------------------");
+                        System.out.println("0 - Back");
+                        System.out.println("1 - Search again");
+                        System.out.println("-1 - Back to Groups tab");
+                        System.out.println("*************************");
+                        choice = sc.nextInt();
+                        sc.nextLine();
+                        System.out.println("*************************");
+                    }
+                    if(choice == 1)
+                        choice = result.size()+1;
+                }
 
+                while(choice>0 && choice<result.size()+1){
+                    // Display all search result
+                    System.out.println("0 - Back");
+                    int count = 1;
+                    for(Group x : result){
+                        String title = "New";
+                        if(x.getAdminID().equals(user.getAccountID()))
+                            title = "Admin";
+                        else if(groupManager.isMember(x, user))
+                            title = "Member";
+                        System.out.println(count + " - " + x.getGroupName() + " \"" + title + "\"");
+                        count++;
+                    }
+            
+                    System.out.println("-------------------------");
+                    System.out.println(result.size()+1 + " - Search again");
+                    System.out.println("-1 - Back to Groups tab");
+                    System.out.println("*************************");
+                    // Select to view searched account
+                    choice = sc.nextInt();
+                    sc.nextLine();
+                    System.out.println("*************************");
+
+                    // Condition if selection out of index bound
+                    while(choice>result.size()+1){
+                        System.out.println("Choice out of bound. Please select again.");
+                        choice = sc.nextInt();
+                    }
+
+                    // If choice in range, view account; else continue
+                    if(choice>0 && choice<result.size()+1){
+                        viewGroupPage(result.get(choice-1));
+                    }
+
+                    result = database.ifContainsGroup(groupIDorGroupName);     // ArrayList of user objects of search result
+
+                    // Sort the names alphabetically
+                    for(int i=1; i<result.size(); i++){
+                        for(int j=0; j<i; j++){
+                            if(result.get(i).getGroupName().compareTo(result.get(j).getGroupName())<0){
+                                Group temp = result.get(i);
+                                result.set(i, result.get(j));
+                                result.set(j, temp);
+                            }
+                        }
+                    }
+
+                    if(result.size()==0){
+                        choice = 2;
+                        while(choice>1){
+                            System.out.println("No result found.");
+                            System.out.println("-------------------------");
+                            System.out.println("0 - Back");
+                            System.out.println("1 - Search again");
+                            System.out.println("-1 - Back to Groups tab");
+                            System.out.println("*************************");
+                            choice = sc.nextInt();
+                            sc.nextLine();
+                            System.out.println("*************************");
+                        }
+                        if(choice == 1)
+                            choice = result.size()+1;
+                    }
                 }
             }
-        }catch(InputMismatchException e ){
+        }catch(InputMismatchException e){
             System.out.println("*************************");
             System.out.println("Invalid input");
             System.out.println("*************************");
             sc.nextLine();
-            displayRequest();
+            searchGroups();
         }
     }
 
@@ -939,6 +1117,38 @@ public class AccountManagement {
         }
     }
 
+    public void displayGroups(User u1){
+        try{
+            ArrayList<String> groupsID = u1.getGroups();
+            ArrayList<Group> groups = new ArrayList<>();
+            for(String x : groupsID){
+                System.out.println(x);
+                groups.add(database.getGroup(x));
+            }
+            int choice = 1;
+            while(choice!=0){
+                System.out.println("<" + groupsID.size() + " groups>");
+                System.out.println("-------------------------");
+                System.out.println("0 - Back");
+                for(int i=0; i<groups.size(); i++){
+                    System.out.println((i+1) + " - " + groups.get(i).getGroupName());
+                }
+                System.out.println("*************************");
+                choice = sc.nextInt();
+                sc.nextLine();
+                System.out.println("*************************");
+                if(choice>0 && choice<=groups.size())
+                    viewGroupPage(groups.get(choice-1));
+            }
+        }catch(InputMismatchException e){
+            System.out.println("*************************");
+            System.out.println("Invalid input");
+            System.out.println("*************************");
+            sc.nextLine();
+            displayGroups(u1);
+        }
+    }
+
     public void displayMembers(Group group, User user){
         try{
             ArrayList<String> membersID = group.getMembers();
@@ -949,6 +1159,7 @@ public class AccountManagement {
             int choice = 1;
             while(choice>0){
                 System.out.println("<" + members.size() + " members>");
+                System.out.println("-------------------------");
                 System.out.println("0 - Back");
                 for(int i=0; i<members.size(); i++){
                     System.out.println((i+1) + " - " + members.get(i).getName());
@@ -976,17 +1187,27 @@ public class AccountManagement {
         }
     }
 
-    public void viewInvitation(User user){
+    public void displayInvitation(){
         try{
             int choice = -1;
             while(choice!=0){
                 ArrayList<String> groupInvitations = user.getGroupInvitations();
                 ArrayList<String> groupsID = new ArrayList<>();
                 ArrayList<Group> groups = new ArrayList<>();
-                for(String x : groupInvitations){
-                    String[] xArr = x.split(":");
+                
+                for(int i=0; i<groupInvitations.size(); i++){
+                    String[] xArr = groupInvitations.get(i).split(":");
                     if(!groupsID.contains(xArr[1]))
                         groupsID.add(xArr[1]);
+
+                    // Check if inviter is still a member of the group
+                    User inviter = database.getProfile(xArr[0]);
+                    Group group = database.getGroup(xArr[1]);
+                    if(!groupManager.isMember(group, inviter)){     // If not, the invitation will be removed
+                        groupInvitations.remove(i);
+                        user.setGroupInvitations(groupInvitations);
+                        database.updateUserProfile(user, "groupInvitations", String.join(",", user.getGroupInvitations()));
+                    }
                 }
                 for(String x : groupsID){
                     if(database.verifyGroupExists(x))
@@ -999,10 +1220,7 @@ public class AccountManagement {
                 }
 
                 System.out.println("<" + groupInvitations.size() + " invitations>");
-                if(groupInvitations.size()==0)
-                    System.out.println("*************************");
-                else
-                    System.out.println("-------------------------");
+                System.out.println("-------------------------");
                 System.out.println("0 - Back");
                 for(int i=0; i<groups.size(); i++){
                     System.out.println((i+1) + " - " + groups.get(i).getGroupName());
@@ -1012,6 +1230,8 @@ public class AccountManagement {
                 sc.nextLine();
                 System.out.println("*************************");
                 int choiceInvite = 1;
+                if(choice==0)
+                    choiceInvite = 0;
                 while(choiceInvite==1 || choiceInvite<0 || choiceInvite>3){
                     Group group = groups.get(choice-1);
                     System.out.println(group.getGroupName());
@@ -1032,9 +1252,9 @@ public class AccountManagement {
                     sc.nextLine();
                     System.out.println("*************************");
                     switch(choiceInvite){
-                        case 1: viewGroupPage(group);
-                        case 2: groupManager.confirmInvitation(group, user);
-                        case 3: groupManager.deleteInvitation(group, user);
+                        case 1 -> viewGroupPage(group);
+                        case 2 -> groupManager.confirmInvitation(group, user);
+                        case 3 -> groupManager.deleteInvitation(group, user);
                     }
                 }
             }
@@ -1043,7 +1263,7 @@ public class AccountManagement {
             System.out.println("Invalid input");
             System.out.println("*************************");
             sc.nextLine();
-            viewInvitation(user);
+            displayInvitation();
         }
     }
 
