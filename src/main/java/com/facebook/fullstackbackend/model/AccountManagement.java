@@ -619,6 +619,31 @@ public class AccountManagement {
         }
     }
 
+    public void messenger(){
+        int choice = 1;
+        while(choice!=0){
+            ArrayList<String> textFiles = chat.getUserChats(user);
+            System.out.println("Messenger");
+            System.out.println("-------------------------");
+            System.out.println("0 - Back");
+            chat.displayAllChats(textFiles, user);
+            System.out.println("*************************");
+            choice = sc.nextInt();
+            sc.nextLine();
+            System.out.println("*************************");
+            if(choice>0 && choice<textFiles.size()+1){
+                if(textFiles.get(choice-1).contains("C"))
+                    chat.displayUserChatName(textFiles.get(choice-1), user);
+                else    
+                    chat.displayGroupChatName(textFiles.get(choice-1));
+                chat.readChat(textFiles.get(choice-1));
+                System.out.println("-------------------------");
+                chat.updateChat(user, textFiles.get(choice-1));
+                System.out.println("*************************");
+            }
+        }
+    }
+
     public void searchFriend(User u1){
         try{
             int choice = 1;

@@ -58,8 +58,9 @@ public class FullstackBackendApplication {
                                                 System.out.println("1 - My Page");
                                                 System.out.println("2 - Search Facebook");
                                                 System.out.println("3 - Your friends");
-                                                System.out.println("4 - Suggestions");
-                                                System.out.println("5 - History");
+                                                System.out.println("4 - Messenger");
+                                                System.out.println("5 - Suggestions");
+                                                System.out.println("6 - History");
                                                 System.out.println("*************************");
                                                 choice1 = sc.nextInt();
                                                 sc.nextLine();
@@ -68,8 +69,9 @@ public class FullstackBackendApplication {
                                                         case 1 -> manager.viewMyPage();
                                                         case 2 -> manager.searchUsers();
                                                         case 3 -> manager.displayFriends();
-                                                        case 4 -> manager.displayRecommendedUsers();
-                                                        case 5 -> manager.displayHistory();
+                                                        case 4 -> manager.messenger();
+                                                        case 5 -> manager.displayRecommendedUsers();
+                                                        case 6 -> manager.displayHistory();
                                                 }
                                         }
                                 }
