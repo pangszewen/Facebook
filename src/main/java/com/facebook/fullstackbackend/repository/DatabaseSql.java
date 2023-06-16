@@ -139,8 +139,12 @@ public class DatabaseSql<T> {
             pstmt.setString(19, user.getBanStartDate());
             if(user.getGroups().size()!=0)
                 pstmt.setString(20, String.join(",", user.getGroups()));
+            else
+                pstmt.setString(20, "");
             if(user.getGroupInvitations().size()!=0)
                 pstmt.setString(21, String.join(",", user.getGroupInvitations()));
+            else
+                pstmt.setString(21, "");
             pstmt.executeUpdate();
         } catch (Exception e) {
             e.printStackTrace();

@@ -126,25 +126,46 @@ public class GroupBuilder {
             if(!x.equals(group.getAdminID()))
                 membersUsername.add(member.getUsername());
         }
-
-        System.out.print("Enter the username of new admin:");
-        String adminUsername = sc.nextLine();
-        System.out.println("-------------------------");
-        while(!membersUsername.contains(adminUsername)){
-            System.out.println("No such member");
-            System.out.println("*************************");
+        int choice = 1;
+        while(choice==1){
             System.out.print("Enter the username of new admin:");
-            adminUsername = sc.nextLine();
+            String adminUsername = sc.nextLine();
             System.out.println("-------------------------");
+            if(!membersUsername.contains(adminUsername)){
+                choice = 2;
+                while(choice>1 || choice<0){
+                    System.out.println("No such member");
+                    System.out.println("-------------------------");
+                    System.out.println("0 - Back");
+                    System.out.println("1 - Change new admin");
+                    System.out.println("*************************");
+                    choice = sc.nextInt();
+                    sc.nextLine();
+                    System.out.println("*************************");
+                }
+            }else{
+                choice = 3;
+                while(choice>2 || choice<0){
+                    User admin = database.getProfile(adminUsername);
+                    System.out.println("New admin: " + admin.getName());
+                    System.out.println("-------------------------");
+                    System.out.println("0 - Back");
+                    System.out.println("1 - Change new admin");
+                    System.out.println("2 - Confirm");
+                    System.out.println("*************************");
+                    choice = sc.nextInt();
+                    sc.nextLine();
+                    System.out.println("*************************");
+                    if(choice==2){
+                        // Update group object
+                        group.setAdminID(admin.getAccountID());
+
+                        // Update to database
+                        database.updateGroup(group, "adminID", admin.getAccountID());
+                    }
+                }
+            }
         }
-        User admin = database.getProfile(adminUsername);
-
-        // Update group object
-        group.setAdminID(admin.getAccountID());
-
-        // Update to database
-        database.updateGroup(group, "adminID", admin.getAccountID());
-
         return group;
     }
 }

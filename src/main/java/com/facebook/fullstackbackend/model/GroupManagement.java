@@ -76,8 +76,9 @@ public class GroupManagement {
 
     public Group editGroupInfo(Group group){
         try{
+            String adminID = group.getAdminID();
             int choice = 1;
-            while(choice>0){
+            while(choice>0 && adminID.equals(group.getAdminID())){
                 System.out.println("Edit Group Info");
                 System.out.println("-------------------------");
                 System.out.println("0 - Back");
@@ -86,11 +87,11 @@ public class GroupManagement {
                 System.out.println("*************************");
                 choice = sc.nextInt();
                 sc.nextLine();
+                System.out.println("*************************");
                 switch(choice){
                     case 1 -> group = groupBuilder.editGroupName(group);
                     case 2 -> group = groupBuilder.changeAdmin(group);
                 }
-                System.out.println("*************************");
             }
             return group;
         }catch(InputMismatchException e){

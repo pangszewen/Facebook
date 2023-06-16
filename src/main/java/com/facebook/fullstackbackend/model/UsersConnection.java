@@ -262,7 +262,6 @@ public class UsersConnection {
                 ArrayList<User> requestList = database.getRequestList(user);
                 System.out.println("<" + requestList.size() + " friend requests>");
                 System.out.println("-------------------------");
-                System.out.println("0 - Back");
                 if(requestList.size()==0){
                     System.out.println("*************************");
                     choice = sc.nextInt();
@@ -272,7 +271,8 @@ public class UsersConnection {
                     System.out.println(requestList.get(i).getName());
                     System.out.println("(" + getTotalMutual(user, requestList.get(i), graph) + " mutuals)");
                     System.out.println("-------------------------");
-                    System.out.println("0 - Next");
+                    if(i!=requestList.size()-1)
+                        System.out.println("0 - Next");
                     System.out.println("1 - Confirm request");
                     System.out.println("2 - Delete request");
                     System.out.println("-1 - Back to Friends page");
@@ -284,12 +284,15 @@ public class UsersConnection {
                         break;
 
                     switch(choice){
-                        case 0: continue;
+                        case 0: if(i!=requestList.size()-1)
+                                    continue;
+                                else 
+                                    i--;
+                                break;
                         case 1: graph = confirmRequest(requestList.get(i), user, graph);
                                 break;
                         case 2: cancelRequest(requestList.get(i), user);
                                 break;
-
                     }
                 }
             }

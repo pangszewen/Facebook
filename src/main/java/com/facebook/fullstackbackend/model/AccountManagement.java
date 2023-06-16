@@ -558,7 +558,7 @@ public class AccountManagement {
                     
                     case 4: if(isGroupAdmin){
                                 int choiceAdmin = 1;
-                                while(choiceAdmin>0){
+                                while(choiceAdmin>0 && isGroupAdmin){
                                     System.out.println("Group Admin");
                                     System.out.println("-------------------------");
                                     System.out.println("0 - Back");
@@ -579,6 +579,7 @@ public class AccountManagement {
                                                 choice = 0;
                                                 break;
                                     }
+                                    isGroupAdmin = groupManager.isGroupAdmin(group, user);
                                 }
                             }
                             break;
@@ -1125,6 +1126,7 @@ public class AccountManagement {
                                     graph = connection.confirmRequest(recomUser.get(i), user, graph);
                                 }else
                                     connection.sendRequest(user, recomUser.get(i));
+                                i--;
                                 break;
                         case 2: viewOtherPage(recomUser.get(i));
                                 i--;
