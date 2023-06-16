@@ -12,6 +12,7 @@ public class GroupManagement {
     DatabaseSql<String> database = new DatabaseSql<>();
     DatabaseSql<Integer> databaseInt = new DatabaseSql<>();
     PostManagement postManager = new PostManagement();
+    Chat chat = new Chat();
 
     public User createGroup(User creator){
         try{
@@ -46,7 +47,7 @@ public class GroupManagement {
             }
             if(choice==1){
                 database.createGroup(group); 
-
+                chat.createGroupChat(group);
                 // Update user groups
                 creator.setGroups(group.getGroupID());
                 database.updateUserProfile(creator, "groups", String.join(",", creator.getGroups()));

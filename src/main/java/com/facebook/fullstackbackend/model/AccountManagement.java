@@ -17,6 +17,7 @@ public class AccountManagement {
     DatabaseSql<String> database = new DatabaseSql<>();
     PostManagement postManager = new PostManagement();
     GroupManagement groupManager = new GroupManagement();
+    Chat chat = new Chat();
     Admin admin = new Admin();
     boolean isAdmin = false;
     LinkedList<String> history;
@@ -334,15 +335,16 @@ public class AccountManagement {
                 System.out.println("2 - About");
                 System.out.println("3 - Friends");
                 System.out.println("4 - Groups");
+                System.out.println("5 - Chat");
                 if(isAdmin)
-                    System.out.println("5 - Admin authorities");
+                    System.out.println("6 - Admin authorities");
                 System.out.println("-------------------------");
                 if(isFriend)
-                    System.out.println("6 - Remove friend");    // if they are already friends
+                    System.out.println("7 - Remove friend");    // if they are already friends
                 else if(statusRequest = connection.checkRequest(u1, user)){
                     System.out.println(u1.getName() + " has requested to be your friend");
-                    System.out.println("6 - Confirm request");  // if the searched user have sent a friend request to the user
-                    System.out.println("7 - Delete request");
+                    System.out.println("7 - Confirm request");  // if the searched user have sent a friend request to the user
+                    System.out.println("8 - Delete request");
                     isFriend=true;
                 }else
                     statusRequest = connection.checkRequest(user, u1);
@@ -350,9 +352,9 @@ public class AccountManagement {
                 if(u1.getUsername() != user.getUsername()){
                     if(!isFriend){
                         if(statusRequest)
-                            System.out.println("6 - Cancel friend request");
+                            System.out.println("7 - Cancel friend request");
                         else
-                            System.out.println("6 - Add friend");
+                            System.out.println("7 - Add friend");
                     }
                 }
 
@@ -412,8 +414,13 @@ public class AccountManagement {
                                 }
                             }
                             break;
+
+                    case 5: if(!chat.verifyUserChatExist(user, u1))
+                                chat.createUserChat(user, u1);
+                            connection.startUserChatting(user, u1);
+                            break;
                     
-                    case 5: if(isAdmin){
+                    case 6: if(isAdmin){
                                 int choiceAdmin = 1;
                                 while(choiceAdmin>0){
                                     System.out.println("Admin");
@@ -442,7 +449,7 @@ public class AccountManagement {
                                 }
                             }
 
-                    case 6: if(isFriend&&!statusRequest)        // user remove friend
+                    case 7: if(isFriend&&!statusRequest)        // user remove friend
                                 connection.removeFriend(user, u1, graph);
                             else if(isFriend&&statusRequest)    // user confirm friend request
                                 graph = connection.confirmRequest(user, u1, graph);
@@ -452,7 +459,7 @@ public class AccountManagement {
                                 connection.cancelRequest(user, u1);
                             break;
 
-                    case 7: connection.cancelRequest(u1, user); // user delete friend request sent by searched user
+                    case 8: connection.cancelRequest(u1, user); // user delete friend request sent by searched user
                             break;
                 }
             }
@@ -477,15 +484,17 @@ public class AccountManagement {
                 System.out.println("1 - Posts");
                 System.out.println("2 - About");
                 System.out.println("3 - Members");
+                if(isGroupMember)
+                    System.out.println("4 - Group chat");
                 if(isGroupAdmin)
-                    System.out.println("4 - Admin authorities");
+                    System.out.println("5 - Admin authorities");
                 System.out.println("-------------------------");
                 if(isGroupAdmin)
-                    System.out.println("5 - Delete group");    // if user is already a member of the group
+                    System.out.println("6 - Delete group");    // if user is already a member of the group
                 else if(isGroupMember)
-                    System.out.println("5 - Leave group");
+                    System.out.println("6 - Leave group");
                 else
-                    System.out.println("5 - Join group");
+                    System.out.println("6 - Join group");
 
                 System.out.println("*************************");
                 choice = sc.nextInt();
@@ -556,7 +565,14 @@ public class AccountManagement {
                             }
                             break;
                     
-                    case 4: if(isGroupAdmin){
+                    case 4: if(isGroupMember){
+                                if(!chat.verifyGroupChatExist(group))
+                                    chat.createGroupChat(group);
+                                connection.startGroupChatting(user, group);
+                            }
+                            break;
+                    
+                    case 5: if(isGroupAdmin){
                                 int choiceAdmin = 1;
                                 while(choiceAdmin>0 && isGroupAdmin){
                                     System.out.println("Group Admin");
@@ -584,7 +600,7 @@ public class AccountManagement {
                             }
                             break;
 
-                    case 5: if(isGroupAdmin){
+                    case 6: if(isGroupAdmin){
                                 database.deleteGroup(group);    // If user is group admin
                                 choice = 0;
                             }else if(isGroupMember)

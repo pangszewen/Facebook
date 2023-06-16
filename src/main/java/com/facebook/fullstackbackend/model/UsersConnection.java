@@ -13,6 +13,7 @@ public class UsersConnection {
     DatabaseSql<String> database = new DatabaseSql<>();
     UserBuilder builder = new UserBuilder();
     ConnectionGraph<String> graph = new ConnectionGraph<>();
+    Chat chat = new Chat();
 
     // Add new user as vertex to graph
     public ConnectionGraph<String> registerGraph(ConnectionGraph<String> graph, String username){
@@ -197,6 +198,10 @@ public class UsersConnection {
 
         // Remove friend request from receiver's request list
         cancelRequest(sender, receiver);
+        //Create chat
+        if(!chat.verifyUserChatExist(sender, receiver))
+            chat.createUserChat(sender, receiver);
+
         return graph;
     }
 
@@ -306,5 +311,23 @@ public class UsersConnection {
             displayRequest(user, graph);
         }
         return graph;
+    }
+
+    public void startUserChatting(User user, User u1){
+        System.out.println(u1.getName());
+        System.out.println("-------------------------");
+        chat.readUserChat(user, u1);
+        System.out.println("-------------------------");
+        chat.updateUserChat(user, u1);
+        System.out.println("*************************");
+    }
+
+    public void startGroupChatting(User user, Group group){
+        System.out.println(group.getGroupName());
+        System.out.println("-------------------------");
+        chat.readGroupChat(group);
+        System.out.println("-------------------------");
+        chat.updateGroupChat(user, group);
+        System.out.println("*************************");
     }
 }

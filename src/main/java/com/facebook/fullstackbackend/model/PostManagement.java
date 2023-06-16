@@ -20,7 +20,7 @@ public class PostManagement {
             System.out.println("-------------------------");
             System.out.println(user.getName());
             System.out.println("What's on your mind?");
-            System.out.println("(Enter \"/end\" to end your content)");
+            System.out.println("(Enter \"/n\" to end your content)");
             System.out.println("*************************");
             String content = sc.nextLine();
             while(!content.contains("/end")){
@@ -81,7 +81,7 @@ public class PostManagement {
             System.out.println("-------------------------");
             System.out.println(user.getName());
             System.out.println("What's on your mind?");
-            System.out.println("(Enter \"/end\" to end your content)");
+            System.out.println("(Enter \"/n\" to end your content)");
             System.out.println("*************************");
             String content = sc.nextLine();
             while(!content.contains("/end")){
@@ -162,7 +162,7 @@ public class PostManagement {
                 choice = 3;     // Initialization
                 StringBuilder strBuilder = new StringBuilder();
                 System.out.println("Write your comment.");
-                System.out.println("(Enter \"/end\" to end your comment)");
+                System.out.println("(Enter \"/n\" to end your comment)");
                 System.out.println("-------------------------");
                 String content = sc.nextLine();
                 while(!content.contains("/end")){
