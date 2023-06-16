@@ -263,6 +263,7 @@ public class UsersConnection {
                 System.out.println("<" + requestList.size() + " friend requests>");
                 System.out.println("-------------------------");
                 if(requestList.size()==0){
+                    System.out.println("0 - Back");
                     System.out.println("*************************");
                     choice = sc.nextInt();
                     System.out.println("*************************");
