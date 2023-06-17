@@ -84,7 +84,7 @@ public class PostManagement {
             System.out.println("(Enter \"/n\" to end your content)");
             System.out.println("*************************");
             String content = sc.nextLine();
-            while(!content.contains("/end")){
+            while(!content.contains("/n")){
                 strBuilder.append(content);
                 content = "\n" + sc.nextLine();
             }
@@ -246,8 +246,13 @@ public class PostManagement {
                 System.out.println("2 - View likes");
                 System.out.println("3 - Comment");
                 System.out.println("4 - View comments");
-                if(user.getAccountID().equals(post.getUserID()) || admin.isAdmin(user))
+                if(post.getPostID().contains("G")){
+                    if(user.getAccountID().equals(post.getUserID()) || user.getAccountID().equals(group.getAdminID()))
+                        System.out.println("5 - Delete post");
+                }else{
+                    if(user.getAccountID().equals(post.getUserID()) || admin.isAdmin(user))
                     System.out.println("5 - Delete post");
+                }
                 System.out.println("-1 - Back to history page");
                 System.out.println("*************************");
                 choice = sc.nextInt();
@@ -266,39 +271,57 @@ public class PostManagement {
                                 break;
                         case 4: viewComments(post);
                                 break;
-                        case 5: if(post.getStatus().equals(Post.Status.GROUP) && user.getAccountID().equals(post.getUserID()) || group.getAdminID().equals(user.getAccountID())){
-                                    deleteGroupPost(post, group);
-                                    history = history.remove(post.getPostID(), history);
-                                }else if(user.getAccountID().equals(post.getUserID())){
-                                    deleteUserPost(post, user);
-                                    history = history.remove(post.getPostID(), history);
-                                }else if(admin.isAdmin(user)){
-                                    admin.manuallyRemoveInappropriateContent(post, u1);
-                                    history = history.remove(post.getPostID(), history);
-                                }   
+                        case 5: if(post.getPostID().contains("G")){
+                                    if(user.getAccountID().equals(post.getUserID()) || user.getAccountID().equals(group.getAdminID())){
+                                        deleteGroupPost(post, group);
+                                        history = history.remove(post.getPostID(), history);
+                                    }
+                                }else{
+                                    if(user.getAccountID().equals(post.getUserID()) || admin.isAdmin(user)){
+                                        deleteUserPost(post, user);
+                                        history = history.remove(post.getPostID(), history);
+                                    }else if(admin.isAdmin(user)){
+                                        admin.manuallyRemoveInappropriateContent(post, u1);
+                                        history = history.remove(post.getPostID(), history);
+                                    }
+                                }  
                                 break;
                     }
                     if(choice==2 || choice==4){
-                        System.out.println("0 - Back");
-                        System.out.println("-1 - Back to history page");
-                        System.out.println("*************************");
-                        choice = sc.nextInt();
-                        sc.nextLine();
-                        System.out.println("*************************");
-                    }else if(choice==5){
-                        if(user.getAccountID().equals(post.getUserID()) || admin.isAdmin(user) || (post.getStatus().equals(Post.Status.GROUP) && user.getAccountID().equals(post.getUserID()) || group.getAdminID().equals(user.getAccountID()))){
-                            System.out.println("Post successfully deleted");
+                        while(choice!=0 && choice!=-1){
+                            System.out.println("0 - Back");
+                            System.out.println("-1 - Back to history page");
                             System.out.println("*************************");
-                            choice = -1;    // Break loop
+                            choice = sc.nextInt();
+                            sc.nextLine();
+                            System.out.println("*************************");
+                        }
+                    }else if(choice==5){
+                        if(post.getPostID().contains("G")){
+                            if(user.getAccountID().equals(post.getUserID()) || user.getAccountID().equals(group.getAdminID())){
+                                 System.out.println("Post successfully deleted");
+                                System.out.println("*************************");
+                                choice = -1;    // Break loop
+                            }
+                        }else{
+                            if(user.getAccountID().equals(post.getUserID()) || admin.isAdmin(user)){
+                                System.out.println("Post successfully deleted");
+                                System.out.println("*************************");
+                                choice = -1;    // Break loop
+                            }
                         }
                     }
                 }
             } 
+            return history;
         }catch(InputMismatchException e){
+            System.out.println("*************************");
+            System.out.println("Invalid input");
             System.out.println("*************************");
             sc.nextLine();
             displayPostAction(user, post, history);
         }
+        System.out.println("Failed to display post action");
         return history;       
     }
 
@@ -351,6 +374,7 @@ public class PostManagement {
             if(yourPosts.size()==0){
                 while(choice!=-1){
                     System.out.println("No posts yet");
+                    System.out.println("-------------------------");
                     if(u1.getUsername().equals(user.getUsername()))
                         System.out.println("-1 - Back to Posts tab");
                     else
@@ -366,15 +390,18 @@ public class PostManagement {
                 for(int i=0; i<yourPosts.size(); i++){
                     yourPosts = database.getUserPosts(user, u1, graph);
                     if(yourPosts.size()==0){
-                        System.out.println("No posts yet");
-                        if(u1.getUsername().equals(user.getUsername()))
-                            System.out.println("-1 - Back to Posts tab");
-                        else
-                            System.out.println("-1 - Back to Main page");
-                        System.out.println("*************************");
-                        choice = sc.nextInt();
-                        sc.nextLine();
-                        System.out.println("*************************");
+                        while(choice!=-1){
+                            System.out.println("No posts yet");
+                            System.out.println("-------------------------");
+                            if(u1.getUsername().equals(user.getUsername()))
+                                System.out.println("-1 - Back to Posts tab");
+                            else
+                                System.out.println("-1 - Back to Main page");
+                            System.out.println("*************************");
+                            choice = sc.nextInt();
+                            sc.nextLine();
+                            System.out.println("*************************");
+                        }
                         break;
                     }
                     ArrayList<String> likeList = database.getPostList(yourPosts.get(i), "likeList");
@@ -414,11 +441,17 @@ public class PostManagement {
                     System.out.println("4 - View comments");
                     if(i!=0)
                         System.out.println("5 - Back");
-                    if(user.getUsername().equals(u1.getUsername()) || admin.isAdmin(user)){
-                        System.out.println("6 - Delete post");
+                    if(post.getPostID().contains("G")){
+                        if(user.getAccountID().equals(post.getUserID()) || user.getAccountID().equals(group.getAdminID()))
+                            System.out.println("5 - Delete post");
+                    }else{
+                        if(user.getAccountID().equals(post.getUserID()) || admin.isAdmin(user))
+                        System.out.println("5 - Delete post");
+                    }
+                    if(user.getUsername().equals(u1.getUsername()))
                         // Check if user is viewing his own page or other users page
                         System.out.println("-1 - Back to Posts tab");
-                    }else
+                    else
                         System.out.println("-1 - Back to Main page");
                     System.out.println("*************************");
                     choice = sc.nextInt();
@@ -440,16 +473,20 @@ public class PostManagement {
                             case 5: if(i!=0)
                                         i = i+2;
                                     break;
-                            case 6: if(post.getStatus().equals(Post.Status.GROUP) && user.getAccountID().equals(post.getUserID()) || group.getAdminID().equals(user.getAccountID())){
-                                    deleteGroupPost(post, group);
-                                    history = history.remove(post.getPostID(), history);
-                                }else if(user.getAccountID().equals(post.getUserID())){
-                                    deleteUserPost(post, user);
-                                    history = history.remove(post.getPostID(), history);
-                                }else if(admin.isAdmin(user)){
-                                    admin.manuallyRemoveInappropriateContent(post, u1);
-                                    history = history.remove(post.getPostID(), history);
-                                }   
+                            case 6: if(post.getPostID().contains("G")){
+                                        if( user.getAccountID().equals(post.getUserID()) || group.getAdminID().equals(user.getAccountID())){
+                                            deleteGroupPost(post, group);
+                                            history = history.remove(post.getPostID(), history);
+                                        }    
+                                    }else{
+                                        if(user.getAccountID().equals(post.getUserID())){
+                                            deleteUserPost(post, user);
+                                            history = history.remove(post.getPostID(), history);
+                                        }else if(admin.isAdmin(user)){
+                                            admin.manuallyRemoveInappropriateContent(post, u1);
+                                            history = history.remove(post.getPostID(), history);
+                                        }   
+                                    }
                                     break;
                         }
                         if(choice==2 || choice==4){
@@ -460,10 +497,18 @@ public class PostManagement {
                             System.out.println("*************************");
                             i++;
                         }else if(choice==6){
-                            if(user.getAccountID().equals(post.getUserID()) || admin.isAdmin(user) || (post.getStatus().equals(Post.Status.GROUP) && user.getAccountID().equals(post.getUserID()) || group.getAdminID().equals(user.getAccountID()))){
-                                System.out.println("Post successfully deleted");
-                                System.out.println("*************************");
-                                choice = 0;
+                            if(post.getPostID().contains("G")){
+                                if(user.getAccountID().equals(post.getUserID()) || user.getAccountID().equals(group.getAdminID())){
+                                    System.out.println("Post successfully deleted");
+                                    System.out.println("*************************");
+                                    choice = -1;    // Break loop
+                                }
+                            }else{
+                                if(user.getAccountID().equals(post.getUserID()) || admin.isAdmin(user)){
+                                    System.out.println("Post successfully deleted");
+                                    System.out.println("*************************");
+                                    choice = -1;    // Break loop
+                                }
                             }
                         }else{
                             i++;
@@ -550,7 +595,7 @@ public class PostManagement {
                     System.out.println("4 - View comments");
                     if(i!=0)
                         System.out.println("5 - Back");
-                    if(user.getAccountID().equals(post.getUserID()) || user.getAccountID().equals(group.getAdminID()))
+                    if(user.getAccountID().equals(post.getUserID()) || group.getAdminID().equals(user.getAccountID()))
                         System.out.println("6 - Delete post");
                     if(group.getMembers().contains(user.getAccountID()))
                         System.out.println("-1 - Back to Posts tab");
@@ -590,9 +635,11 @@ public class PostManagement {
                             System.out.println("*************************");
                             i++;
                         }else if(choice==6){
-                            System.out.println("Post successfully deleted");
-                            System.out.println("*************************");
-                            choice = 0;
+                            if(user.getAccountID().equals(post.getUserID()) || group.getAdminID().equals(user.getAccountID())){
+                                System.out.println("Post successfully deleted");
+                                System.out.println("*************************");
+                                choice = 0;
+                            }
                         }else{
                             i++;
                         }

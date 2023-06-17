@@ -50,34 +50,43 @@ public class UsersConnection {
     }
 
     public User editAccount(User user){
-        int choice = 1;
-        while(choice>0){
-            System.out.println("Edit Account");
-            System.out.println("-------------------------");
-            System.out.println("0 - Back");
-            System.out.println("1 - Password");
-            System.out.println("2 - Name");
-            System.out.println("3 - Birthday");
-            System.out.println("4 - Address");
-            System.out.println("5 - Gender");
-            System.out.println("6 - Relationship status");
-            System.out.println("7 - Hobby");
-            System.out.println("8 - Jobs");
-            System.out.println("*************************");
-            choice = sc.nextInt();
-            sc.nextLine();
-            System.out.println("*************************");
-            switch(choice){
-                case 1 -> user = builder.editPassword(user);
-                case 2 -> user = builder.editName(user);
-                case 3 -> user = builder.editBirthday(user);
-                case 4 -> user = builder.editAddress(user);
-                case 5 -> user = builder.editGender(user);
-                case 6 -> user = builder.editStatus(user);
-                case 7 -> user = builder.editHobbies(user);
-                case 8 -> user = builder.editJobs(user);
+        try{
+            int choice = 1;
+            while(choice!=0){
+                System.out.println("Edit Account");
+                System.out.println("-------------------------");
+                System.out.println("0 - Back");
+                System.out.println("1 - Password");
+                System.out.println("2 - Name");
+                System.out.println("3 - Birthday");
+                System.out.println("4 - Address");
+                System.out.println("5 - Gender");
+                System.out.println("6 - Relationship status");
+                System.out.println("7 - Hobby");
+                System.out.println("8 - Jobs");
+                System.out.println("*************************");
+                choice = sc.nextInt();
+                sc.nextLine();
+                System.out.println("*************************");
+                switch(choice){
+                    case 1 -> user = builder.editPassword(user);
+                    case 2 -> user = builder.editName(user);
+                    case 3 -> user = builder.editBirthday(user);
+                    case 4 -> user = builder.editAddress(user);
+                    case 5 -> user = builder.editGender(user);
+                    case 6 -> user = builder.editStatus(user);
+                    case 7 -> user = builder.editHobbies(user);
+                    case 8 -> user = builder.editJobs(user);
+                }
+                System.out.println("*************************");
             }
+            return user;
+        }catch(InputMismatchException e ){
             System.out.println("*************************");
+            System.out.println("Invalid input");
+            System.out.println("*************************");
+            sc.nextLine();
+            editAccount(user);
         }
         return user;
     }

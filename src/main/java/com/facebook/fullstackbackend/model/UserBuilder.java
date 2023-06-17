@@ -5,6 +5,7 @@ import java.time.Period;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
+import java.util.InputMismatchException;
 import java.util.Scanner;
 import java.util.Stack;
 
@@ -250,221 +251,378 @@ public class UserBuilder {
 
     // Edit account details
     public User editPassword(User user){
-        user = database.getAccount(user.getUsername());
-        System.out.print("Enter your old password: ");
-        String oldPassword = sc.nextLine();
+        try{
+            user = database.getAccount(user.getUsername());
+            System.out.print("Enter your old password: ");
+            String oldPassword = sc.nextLine();
 
-        while(!database.hashPassword(oldPassword).equals(user.getPassword())){
-            System.out.println("Wrong password. Please enter again.");
-            //System.out.println("Enter 0 to exit.");
-            System.out.print("Old password: ");
-            oldPassword = sc.nextLine();
-            //if(oldPassword.equals("0"))
-            //    return user;
+            while(!database.hashPassword(oldPassword).equals(user.getPassword())){
+                System.out.println("Wrong password. Please enter again.");
+                //System.out.println("Enter 0 to exit.");
+                System.out.print("Old password: ");
+                oldPassword = sc.nextLine();
+                //if(oldPassword.equals("0"))
+                //    return user;
+            }
+
+            System.out.print("Enter your new password: ");
+            String newPassword = sc.nextLine();
+            while(!verifyPassword(newPassword)){   // Check strength of password
+                System.out.print("New password: ");
+                newPassword = sc.nextLine();
+            }
+
+            int choice = 2;
+            while(choice!=0 && choice!=1){
+                System.out.println("-------------------------");
+                System.out.println("0 - Back");
+                System.out.println("1 - Confirm changes");
+                System.out.println("*************************");
+                choice = sc.nextInt();
+                sc.nextLine();
+                System.out.println("*************************");
+            }
+            if(choice==1){
+                // Hashing the new password
+                newPassword = database.hashPassword(newPassword);
+
+                // Update user object
+                user.setPassword(newPassword);
+
+                // Update to database
+                database.updateUserAccount(user, "password", newPassword);
+
+                // Get back the user object
+                user = database.getProfile(user.getUsername());
+            }
+            return user;
+        }catch(InputMismatchException e ){
+            System.out.println("*************************");
+            System.out.println("Invalid input");
+            System.out.println("*************************");
+            sc.nextLine();
+            editPassword(user);
         }
-
-        System.out.print("Enter your new password: ");
-        String newPassword = sc.nextLine();
-        while(!verifyPassword(newPassword)){   // Check strength of password
-            System.out.print("New password: ");
-            newPassword = sc.nextLine();
-        }
-        
-        // Hashing the new password
-        newPassword = database.hashPassword(newPassword);
-
-        // Update user object
-        user.setPassword(newPassword);
-
-        // Update to database
-        database.updateUserAccount(user, "password", newPassword);
-
-        // Get back the user object
-        user = database.getProfile(user.getUsername());
         return user;
     }
 
     public User editName(User user){
-        System.out.println("Current name: " + user.getName());
-        System.out.print("Change name to: ");
-        String name = sc.nextLine();
-        
-        // Update user object
-        user.setName(name);
+        try{
+            System.out.println("Current name: " + user.getName());
+            System.out.print("Change name to: ");
+            String name = sc.nextLine();
+            
+            int choice = 2;
+            while(choice!=0 && choice!=1){
+                System.out.println("-------------------------");
+                System.out.println("0 - Back");
+                System.out.println("1 - Confirm changes");
+                System.out.println("*************************");
+                choice = sc.nextInt();
+                sc.nextLine();
+                System.out.println("*************************");
+            }
+            if(choice==1){
+                // Update user object
+                user.setName(name);
 
-        // Update to database
-        database.updateUserProfile(user, "name", name);
-
+                // Update to database
+                database.updateUserProfile(user, "name", name);
+            }
+            return user;
+        }catch(InputMismatchException e ){
+            System.out.println("*************************");
+            System.out.println("Invalid input");
+            System.out.println("*************************");
+            sc.nextLine();
+            editName(user);
+        }
         return user;
     }
 
     public User editBirthday(User user){
-        System.out.println("Current birthday: " + user.getBirthday());
-        System.out.print("Change birthday to: ");
-        String birthday = sc.nextLine();
-        while(!validateBirthdayFormat(birthday)){
-            System.out.print("Change birthday to (format: YYYY-MM-DD): ");
-            birthday = sc.nextLine();
+        try{
+            System.out.println("Current birthday: " + user.getBirthday());
+            System.out.print("Change birthday to: ");
+            String birthday = sc.nextLine();
+            while(!validateBirthdayFormat(birthday)){
+                System.out.print("Change birthday to (format: YYYY-MM-DD): ");
+                birthday = sc.nextLine();
+            }
+
+            int choice = 2;
+            while(choice!=0 && choice!=1){
+                System.out.println("-------------------------");
+                System.out.println("0 - Back");
+                System.out.println("1 - Confirm changes");
+                System.out.println("*************************");
+                choice = sc.nextInt();
+                sc.nextLine();
+                System.out.println("*************************");
+            }
+            if(choice==1){
+                // Update user object
+                user.setBirthday(birthday);
+
+                // Update age based on birthday
+                LocalDate currentDate = LocalDate.now();
+                Period period = Period.between(LocalDate.parse(birthday), currentDate);
+                int age = period.getYears();
+                user.setAge(age);
+
+                // Update to database
+                database.updateUserProfile(user, "birthday", birthday);
+                databaseInt.updateUserProfile(user, "age", age);
+            }
+            return user;
+        }catch(InputMismatchException e ){
+            System.out.println("*************************");
+            System.out.println("Invalid input");
+            System.out.println("*************************");
+            sc.nextLine();
+            editBirthday(user);
         }
-        // Update user object
-        user.setBirthday(birthday);
-
-        // Update age based on birthday
-        LocalDate currentDate = LocalDate.now();
-        Period period = Period.between(LocalDate.parse(birthday), currentDate);
-        int age = period.getYears();
-        user.setAge(age);
-
-        // Update to database
-        database.updateUserProfile(user, "birthday", birthday);
-        databaseInt.updateUserProfile(user, "age", age);
-
         return user;
     }
 
     public User editAddress(User user){
-        System.out.println("Current address: " + user.getAddress());
-        System.out.print("Change address to: ");
-        String address = sc.nextLine();
-        
-        // Update user object
-        user.setAddress(address);
+        try{
+            System.out.println("Current address: " + user.getAddress());
+            System.out.print("Change address to: ");
+            String address = sc.nextLine();
 
-        // Update to database
-        database.updateUserProfile(user, "address", address);
+            int choice = 2;
+            while(choice!=0 && choice!=1){
+                System.out.println("-------------------------");
+                System.out.println("0 - Back");
+                System.out.println("1 - Confirm changes");
+                System.out.println("*************************");
+                choice = sc.nextInt();
+                sc.nextLine();
+                System.out.println("*************************");
+            }
+            if(choice==1){
+                // Update user object
+                user.setAddress(address);
 
+                // Update to database
+                database.updateUserProfile(user, "address", address);
+            }
+            return user;
+        }catch(InputMismatchException e ){
+            System.out.println("*************************");
+            System.out.println("Invalid input");
+            System.out.println("*************************");
+            sc.nextLine();
+            editAddress(user);
+        }
         return user;
     }
 
     public User editGender(User user){
-        System.out.println("Current gender: " + user.getGender());
-        System.out.print("Change gender to (MALE/FEMALE): ");
-        String gender = sc.nextLine();
+        try{
+            System.out.println("Current gender: " + user.getGender());
+            System.out.print("Change gender to (MALE/FEMALE): ");
+            String gender = sc.nextLine();
 
-        // Update user object
-        user.setGender(gender);
+            int choice = 2;
+            while(choice!=0 && choice!=1){
+                System.out.println("-------------------------");
+                System.out.println("0 - Back");
+                System.out.println("1 - Confirm changes");
+                System.out.println("*************************");
+                choice = sc.nextInt();
+                sc.nextLine();
+                System.out.println("*************************");
+            }
+            if(choice==1){
+                // Update user object
+                user.setGender(gender);
 
-        // Update to database
-        database.updateUserProfile(user, "gender", gender);
-
+                // Update to database
+                database.updateUserProfile(user, "gender", gender);
+            }
+            return user;
+        }catch(InputMismatchException e ){
+            System.out.println("*************************");
+            System.out.println("Invalid input");
+            System.out.println("*************************");
+            sc.nextLine();
+            editGender(user);
+        }
         return user;
     }
 
     public User editStatus(User user){
-        if(user.getStatus().length()>0){
-            System.out.println("Current relationship status: " + user.getStatus());
-            System.out.print("Change status to: ");
-        }else
-            System.out.print("Relationship status: ");
-        String status = sc.nextLine();
+        try{
+            if(user.getStatus().length()>0){
+                System.out.println("Current relationship status: " + user.getStatus());
+                System.out.print("Change status to: ");
+            }else
+                System.out.print("Relationship status: ");
+            String status = sc.nextLine();
 
-        // Update user object
-        user.setStatus(status);
+            int choice = 2;
+            while(choice!=0 && choice!=1){
+                System.out.println("-------------------------");
+                System.out.println("0 - Back");
+                System.out.println("1 - Confirm changes");
+                System.out.println("*************************");
+                choice = sc.nextInt();
+                sc.nextLine();
+                System.out.println("*************************");
+            }
+            if(choice==1){
+                // Update user object
+                user.setStatus(status);
 
-        // Update to database
-        database.updateUserProfile(user, "status", status);
-
+                // Update to database
+                database.updateUserProfile(user, "status", status);
+            }
+            return user;
+        }catch(InputMismatchException e ){
+            System.out.println("*************************");
+            System.out.println("Invalid input");
+            System.out.println("*************************");
+            sc.nextLine();
+            editStatus(user);
+        }
         return user;
     }
 
     public User editHobbies(User user){
-        System.out.println("Current hobby: " + user.getHobbies().get(0));
-        System.out.println("1 - Add hobby");
-        System.out.println("2 - Change hobby");
-        System.out.println("3 - Delete hobby");
-        System.out.println("*************************");
-        int choice = sc.nextInt();
-        sc.nextLine();
-        System.out.println("*************************");
-        switch(choice){
-            case 1: System.out.print("New hobby: ");
-                    String hobby = sc.nextLine();
-                    System.out.println("*************************");
-                    // Update user object
-                    user.getHobbies().add(hobby);
-                    break;
+        try{
+            int choice = 1;
+            while(choice!=0){
+                System.out.println("Current hobby: " + user.getHobbies().get(0));
+                System.out.println("0 - Back");
+                System.out.println("1 - Add hobby");
+                System.out.println("2 - Change hobby");
+                System.out.println("3 - Delete hobby");
+                System.out.println("*************************");
+                choice = sc.nextInt();
+                sc.nextLine();
+                System.out.println("*************************");
+                switch(choice){
+                    case 1: System.out.print("New hobby: ");
+                            String hobby = sc.nextLine();
+                            System.out.println("*************************");
+                            // Update user object
+                            user.getHobbies().add(hobby);
+                            break;
 
-            case 2: System.out.println("Select hobby: ");
-                    for(int i=0; i<user.getHobbies().size(); i++){
-                        System.out.println((i+1) + " - " + user.getHobbies().get(i));
-                    }
-                    System.out.println("*************************");
-                    choice = sc.nextInt();
-                    System.out.println("*************************");
-                    // Update user object
-                    // Change the desired hobby to be in index 0
-                    String temp = user.getHobbies().get(choice-1);
-                    user.getHobbies().set(choice-1, user.getHobbies().get(0));
-                    user.getHobbies().set(0, temp);
-                    break;
+                    case 2: while(choice!=0){
+                                System.out.println("Select hobby: ");
+                                System.out.println("0 - Back");
+                                for(int i=0; i<user.getHobbies().size(); i++){
+                                    System.out.println((i+1) + " - " + user.getHobbies().get(i));
+                                }
+                                System.out.println("*************************");
+                                choice = sc.nextInt();
+                                System.out.println("*************************");
+                                // Update user object
+                                // Change the desired hobby to be in index 0
+                                String temp = user.getHobbies().get(choice-1);
+                                user.getHobbies().set(choice-1, user.getHobbies().get(0));
+                                user.getHobbies().set(0, temp);
+                            }
+                            if(choice==0)
+                                choice = 1;
+                            break;
 
-            case 3: System.out.println("Delete hobby: ");
-                    for(int i=0; i<user.getHobbies().size(); i++){
-                        System.out.println((i+1) + " - " + user.getHobbies().get(i));
-                    }
-                    System.out.println("*************************");
-                    choice = sc.nextInt();
-                    System.out.println("*************************");
-                    // Update user object
-                    user.getHobbies().remove(choice-1);
-                    break;
+                    case 3: while(choice!=0){
+                                System.out.println("Delete hobby: ");
+                                System.out.println("0 - Back");
+                                for(int i=0; i<user.getHobbies().size(); i++){
+                                    System.out.println((i+1) + " - " + user.getHobbies().get(i));
+                                }
+                                System.out.println("*************************");
+                                choice = sc.nextInt();
+                                System.out.println("*************************");
+                                // Update user object
+                                user.getHobbies().remove(choice-1);
+                            }
+                            if(choice==0)
+                                choice = 1;
+                            break;
+                }
+                // Update to database
+                String hobbies = String.join(",", user.getHobbies());
+                database.updateUserProfile(user, "hobbies", hobbies);
+            }
+            return user;
+        }catch(InputMismatchException e ){
+            System.out.println("*************************");
+            System.out.println("Invalid input");
+            System.out.println("*************************");
+            sc.nextLine();
+            editHobbies(user);
         }
-        // Update to database
-        String hobbies = String.join(",", user.getHobbies());
-        database.updateUserProfile(user, "hobbies", hobbies);
-
         return user;
     }
 
     public User editJobs(User user){
-        Stack<String> jobStack = user.getJobs();
-        if(!jobStack.empty()){
-            String currentJob = jobStack.pop();
-            System.out.println("Current job: " + currentJob);
-            if(!jobStack.empty())
-                System.out.println("Previous job: " + jobStack.peek());
-            jobStack.push(currentJob);
-        }
-        System.out.println("1 - Add job");
-        if(!jobStack.empty())
-            System.out.println("2 - Delete job");
-        System.out.println("*************************");
-        int choice = sc.nextInt();
-        sc.nextLine();
-        System.out.println("*************************");
-        switch(choice){
-            case 1: System.out.print("New job: ");
-                    String currentJob = sc.nextLine();
+        try{
+            int choice = 1;
+            while(choice!=0){
+                Stack<String> jobStack = user.getJobs();
+                if(!jobStack.empty()){
+                    String currentJob = jobStack.pop();
+                    System.out.println("Current job: " + currentJob);
+                    if(!jobStack.empty())
+                        System.out.println("Previous job: " + jobStack.peek());
                     jobStack.push(currentJob);
-                    break;
+                }
+                System.out.println("0 - Back");
+                System.out.println("1 - Add job");
+                if(!jobStack.empty())
+                    System.out.println("2 - Delete job");
+                System.out.println("*************************");
+                choice = sc.nextInt();
+                sc.nextLine();
+                System.out.println("*************************");
+                switch(choice){
+                    case 1: System.out.print("New job: ");
+                            String currentJob = sc.nextLine();
+                            jobStack.push(currentJob);
+                            break;
 
-            case 2: System.out.println("Delete job: ");
-                    Stack<String> tempStack = new Stack<>();
-                    int count = 1;
-                    while(!jobStack.empty()){
-                        System.out.println(count + " - " + jobStack.peek());
-                        tempStack.push(jobStack.pop());
-                        count++;
-                    }
-                    choice = sc.nextInt();
-                    count = tempStack.size();
-                    while(!tempStack.empty()){
-                        if(count!=choice)
-                            jobStack.push(tempStack.pop());
-                        else
-                            tempStack.pop();
-                        count--;
-                    }
-                    break;
+                    case 2: System.out.println("Delete job: ");
+                            Stack<String> tempStack = new Stack<>();
+                            int count = 1;
+                            while(!jobStack.empty()){
+                                System.out.println(count + " - " + jobStack.peek());
+                                tempStack.push(jobStack.pop());
+                                count++;
+                            }
+                            choice = sc.nextInt();
+                            count = tempStack.size();
+                            while(!tempStack.empty()){
+                                if(count!=choice)
+                                    jobStack.push(tempStack.pop());
+                                else
+                                    tempStack.pop();
+                                count--;
+                            }
+                            break;
+                }
+                // Update user object
+                user.setJobs(jobStack);
+
+                // Update to database
+                String jobs = String.join(",", jobStack);
+                database.updateUserProfile(user, "jobs", jobs);
+                
+                System.out.println("*************************");
             }
-            // Update user object
-            user.setJobs(jobStack);
-
-            // Update to database
-            String jobs = String.join(",", jobStack);
-            database.updateUserProfile(user, "jobs", jobs);
-        
-        System.out.println("*************************");
+            return user;
+        }catch(InputMismatchException e ){
+            System.out.println("*************************");
+            System.out.println("Invalid input");
+            System.out.println("*************************");
+            sc.nextLine();
+            editJobs(user);
+        }
         return user;
     }
 
