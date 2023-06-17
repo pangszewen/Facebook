@@ -11,25 +11,28 @@ public class PostManagement {
     DatabaseSql<String> database = new DatabaseSql<>();
     Admin admin = new Admin();
 
-    // Create new user post
+    // Method to create new user post.
     public User createUserPost(User user){
         try{
             PostBuilder postBuilder = new PostBuilder(user);
+
+            // Used to construct the content of the post.
             StringBuilder strBuilder = new StringBuilder();
             System.out.println("Create Post");
             System.out.println("-------------------------");
-            System.out.println(user.getName());
+            System.out.println("\u001B[1m" + user.getName() + "\u001B[0m");
             System.out.println("What's on your mind?");
             System.out.println("(Enter \"/n\" to end your content)");
-            System.out.println("*************************");
+            System.out.println("-------------------------");
             String content = sc.nextLine();
-            while(!content.contains("/end")){
+            while(!content.contains("/n")){
                 strBuilder.append(content);
                 content = "\n" + sc.nextLine();
             }
             postBuilder.setContent(strBuilder.toString());
             System.out.println("*************************");
-            int choice = 3;
+
+            int choice = 3;     // Initialization
             while(choice!=1 && choice!=2){
                 System.out.println("Setting of post");
                 System.out.println("-------------------------");
@@ -43,8 +46,10 @@ public class PostManagement {
                 case 1 -> postBuilder.setStatus(Post.Status.PUBLIC);
                 case 2 -> postBuilder.setStatus(Post.Status.PRIVATE);
             }
+            // Get Post object.
             Post post = postBuilder.build();
-            choice = 2;
+
+            choice = 2;     // Initialization
             while(choice!=0 && choice!=1){
                 System.out.println("0 - Delete draft");
                 System.out.println("1 - Post draft");
@@ -52,13 +57,17 @@ public class PostManagement {
                 choice = sc.nextInt();
                 System.out.println("*************************");
             }
+            // User post successfully created.
             if(choice==1){
+                // Upload post to database
                 database.uploadPost(post); 
+                // Update user object
                 user.setNoOfCreatedPost(user.getNoOfCreatedPost()+1);
                 DatabaseSql<Integer> databaseInt = new DatabaseSql<>();
                 databaseInt.updateUserProfile(user, "noOfCreatedPost", user.getNoOfCreatedPost());
             }
 
+            // Post will be automatically removed if contains inappropriate content.
             autoRemoveInappropriateContent(post);
             return user;
         }catch(InputMismatchException e){
@@ -72,10 +81,12 @@ public class PostManagement {
         return user;
     }
 
-    // Create new group post (not included into the noOfCreatedPost of user)
+    // Method to create new group post (not included into the noOfCreatedPost of user)
     public Group createGroupPost(Group group, User user){
         try{
             PostBuilder postBuilder = new PostBuilder(group, user);
+
+            // Used to construct the content of the post.
             StringBuilder strBuilder = new StringBuilder();
             System.out.println("Create Group Post");
             System.out.println("-------------------------");
@@ -90,9 +101,9 @@ public class PostManagement {
             }
             postBuilder.setContent(strBuilder.toString());
             System.out.println("*************************");
-
             Post post = postBuilder.build();
-            int choice = 2;
+
+            int choice = 2;     // Initialization
             while(choice!=0 && choice!=1){
                 System.out.println("0 - Delete draft");
                 System.out.println("1 - Post draft");
@@ -100,13 +111,17 @@ public class PostManagement {
                 choice = sc.nextInt();
                 System.out.println("*************************");
             }
+            // Group post successfully created.
             if(choice==1){
+                // Upload post to database
                 database.uploadPost(post); 
+                // Update user object
                 group.setNoOfCreatedPost(group.getNoOfCreatedPost()+1);
                 DatabaseSql<Integer> databaseInt = new DatabaseSql<>();
                 databaseInt.updateGroup(group, "noOfCreatedPost", group.getNoOfCreatedPost());
             }
 
+            // Post will be automatically removed if contains inappropriate content.
             autoRemoveInappropriateContent(post);
             return group;
         }catch(InputMismatchException e){
@@ -120,7 +135,7 @@ public class PostManagement {
         return group;
     }
 
-    // Delete existing user post
+    // Method to delete existing user post.
     public void deleteUserPost(Post post, User user){
         database.deletePost(post);
         user.setNoOfDeletedPost(user.getNoOfDeletedPost()+1);
@@ -128,7 +143,7 @@ public class PostManagement {
         databaseInt.updateUserProfile(user, "noOfDeletedPost", user.getNoOfDeletedPost());
     }
 
-    // Delete existing group post
+    // Method to delete existing group post.
     public void deleteGroupPost(Post post, Group group){
         database.deletePost(post);
         group.setNoOfDeletedPost(group.getNoOfDeletedPost()+1);
@@ -136,8 +151,9 @@ public class PostManagement {
         databaseInt.updateGroup(group, "noOfDeletedPost", group.getNoOfDeletedPost());
     }
 
+    // Method to like post.
     public Post likePost(Post post, User user){
-        post.setLikes(post.getLikes()+1);
+        post.setLikes(post.getLikes()+1);   // Increment of likes
         ArrayList<String> likeList = database.getPostList(post, "likeList");
         likeList.add(user.getUsername());
         database.updatePostList(post, "likeList", likeList);
@@ -145,8 +161,10 @@ public class PostManagement {
         databaseInt.updatePost(post, "likes", post.getLikes());
         return post;
     }
+
+    // Method to unlike post.
     public Post unlikePost(Post post, User user){
-        post.setLikes(post.getLikes()-1);
+        post.setLikes(post.getLikes()-1);   // Decrement of likes
         ArrayList<String> likeList = database.getPostList(post, "likeList");
         likeList.remove(user.getUsername());
         database.updatePostList(post, "likeList", likeList);
@@ -155,22 +173,25 @@ public class PostManagement {
         return post;
     }
 
+    // Method to comment post.
     public Post commentPost(Post post, User user){
         try{
             int choice = 3;
             while(choice>1){
                 choice = 3;     // Initialization
+                // Used to construct the comment.
                 StringBuilder strBuilder = new StringBuilder();
                 System.out.println("Write your comment.");
                 System.out.println("(Enter \"/n\" to end your comment)");
                 System.out.println("-------------------------");
                 String content = sc.nextLine();
-                while(!content.contains("/end")){
+                while(!content.contains("/n")){
                     strBuilder.append(content);
                     content = "\n" + sc.nextLine();
                 }
                 String comment = strBuilder.toString();
                 System.out.println("-------------------------");
+
                 while(choice<0 || choice>2){
                     System.out.println("0 - Back");
                     System.out.println("1 - Post comment");
@@ -180,8 +201,9 @@ public class PostManagement {
                     sc.nextLine();
                     System.out.println("*************************");
                 }
+                // Comment successfully posted.
                 if(choice==1){
-                    post.setComments(post.getComments()+1);
+                    post.setComments(post.getComments()+1); // Increment comments
                     String userComments = user.getUsername() + ":" + comment;
                     ArrayList<String> commentList = database.getPostList(post, "commentList");
                     commentList.add(userComments);
@@ -190,6 +212,7 @@ public class PostManagement {
                     databaseInt.updatePost(post, "comments", post.getComments());
                 }
             }
+            return post;
         }catch(InputMismatchException e){
             System.out.println("*************************");
             System.out.println("Invalid input");
@@ -197,27 +220,32 @@ public class PostManagement {
             sc.nextLine();
             commentPost(post, user);
         }
+        System.out.println("Failed to comment post");
         return post;
     }
 
+    // Method to view post.
     public void viewPost(Post post){
         User user = database.getProfile(post.getUserID());
         System.out.println("\u001B[1m" + user.getName() + "\u001B[0m");     // Bold text
+
         if(post.getStatus().equals(Post.Status.GROUP)){
             String[] arr = post.getPostID().split("G");
             Group group = database.getGroup(arr[0]);
-            System.out.println("<" + group.getGroupName() + ">");
+            System.out.println("<" + group.getGroupName() + ">");   // Display group name
         }else
-            System.out.println("<" + String.valueOf(post.getStatus()).toLowerCase() + ">");
+            System.out.println("<" + String.valueOf(post.getStatus()).toLowerCase() + ">");     // Display public or private
+
         System.out.println();
         System.out.println(post.getContent());
         System.out.println();
         System.out.println(post.getPostTime());
         System.out.println("-------------------------");
-        System.out.println(post.getLikes() + " likes\t\t" + post.getComments() + " comments");
+        System.out.println(post.getLikes() + " likes\t\t" + post.getComments() + " comments");  // Display number of likes and comments
         System.out.println("*************************");
     }
 
+    // Method to access post action (like, comment, view likes and comments, etc). This method is used when viewing post from history.
     public LinkedList<String> displayPostAction(User user, Post post, LinkedList<String> history){
         try{
             int choice = 5;
@@ -228,28 +256,30 @@ public class PostManagement {
                 if(post.getStatus().equals(Post.Status.GROUP)){
                     postID = post.getPostID().split("G");
                     group = database.getGroup(postID[0]);
-                }else
-                    postID = post.getPostID().split("U");
+                }
                 User u1 = database.getProfile(post.getUserID());
                 viewPost(post);
                             
                 boolean likeStatus = false;
                 for(String x : likeList){
-                    if(x.equals(user.getUsername())){
+                    if(x.equals(user.getUsername())){   // If user has liked the post, he is able to unlike it
                         System.out.println("1 - Unlike");
                         likeStatus = true;
                         break;
                     }
                 }
+
                 if(!likeStatus)
                     System.out.println("1 - Like");
                 System.out.println("2 - View likes");
                 System.out.println("3 - Comment");
                 System.out.println("4 - View comments");
                 if(post.getPostID().contains("G")){
+                    // For group post, only group admin or the creator of the post can delete it.
                     if(user.getAccountID().equals(post.getUserID()) || user.getAccountID().equals(group.getAdminID()))
                         System.out.println("5 - Delete post");
                 }else{
+                    // For user post, only admin of Facebook or creator of the post can delete it.
                     if(user.getAccountID().equals(post.getUserID()) || admin.isAdmin(user))
                     System.out.println("5 - Delete post");
                 }
@@ -274,20 +304,21 @@ public class PostManagement {
                         case 5: if(post.getPostID().contains("G")){
                                     if(user.getAccountID().equals(post.getUserID()) || user.getAccountID().equals(group.getAdminID())){
                                         deleteGroupPost(post, group);
-                                        history = history.remove(post.getPostID(), history);
+                                        history = history.remove(post.getPostID(), history);    // Remove post from history too.
                                     }
                                 }else{
-                                    if(user.getAccountID().equals(post.getUserID()) || admin.isAdmin(user)){
+                                    if(user.getAccountID().equals(post.getUserID()) || admin.isAdmin(user)){    // If is creator of post
                                         deleteUserPost(post, user);
                                         history = history.remove(post.getPostID(), history);
-                                    }else if(admin.isAdmin(user)){
+                                    }else if(admin.isAdmin(user)){  // If is admin
                                         admin.manuallyRemoveInappropriateContent(post, u1);
-                                        history = history.remove(post.getPostID(), history);
+                                        history = history.remove(post.getPostID(), history);    
                                     }
                                 }  
                                 break;
                     }
-                    if(choice==2 || choice==4){
+                    
+                    if(choice==2 || choice==4){     // If user select to view likes or comments.
                         while(choice!=0 && choice!=-1){
                             System.out.println("0 - Back");
                             System.out.println("-1 - Back to history page");
@@ -296,7 +327,7 @@ public class PostManagement {
                             sc.nextLine();
                             System.out.println("*************************");
                         }
-                    }else if(choice==5){
+                    }else if(choice==5){    // If user select to delete post.
                         if(post.getPostID().contains("G")){
                             if(user.getAccountID().equals(post.getUserID()) || user.getAccountID().equals(group.getAdminID())){
                                  System.out.println("Post successfully deleted");
@@ -325,17 +356,19 @@ public class PostManagement {
         return history;       
     }
 
+    // Method to view likes of post.
     public void viewLikes(Post post){
-        ArrayList<String> likeList = database.getPostList(post, "likeList");    // List of usernames of users who like the post
+        ArrayList<String> likeList = database.getPostList(post, "likeList");    // List of usernames of users who like the post.
         System.out.println("<" + post.getLikes() + " likes>");
         System.out.println("-------------------------");
         for(String x : likeList){
-            System.out.println(database.getProfile(x).getName());   // Display the name of user account, not username
+            System.out.println(database.getProfile(x).getName());   // Display the name of user account, not username.
         }
         if(post.getLikes()!=0)
             System.out.println("-------------------------");
     }   
 
+    // Method to view comments of post.
     public void viewComments(Post post){
         ArrayList<String> commentList = database.getPostList(post, "commentList");
         System.out.println("<" + post.getComments() + " comments>");
@@ -348,8 +381,8 @@ public class PostManagement {
         }
     }
 
-    // Content is automatically determined whether it's appropriate or not by checking the prohibited words list
-    // This method is implemented after user posted new post, if it is inappropriate, the post will be taken down immediately
+    // Content is automatically determined whether it's appropriate or not by checking the prohibited words list.
+    // This method is implemented after user posted new post, if it is inappropriate, the post will be taken down immediately.
     public void autoRemoveInappropriateContent(Post post) {        
         if(database.containsOffensiveLanguage(post.getContent())){
             if(post.getStatus().equals(Post.Status.GROUP)){
@@ -359,15 +392,17 @@ public class PostManagement {
                 String[] postID = post.getPostID().split("U");
                 deleteUserPost(post, database.getProfile(postID[0]));
             }
+            // Notify the user that the post is taken down because contains inappropriate content.
             System.out.println("***Your post contains inappropriate content**");
             System.out.println("***Your post has been automatically deleted by the system***");
             System.out.println("*************************"); 
         }
     }
 
-    public LinkedList<String> displayPosts(User user, User u1, ConnectionGraph<String> graph, LinkedList<String> history){
+    // Method to display all user posts by priotizing newest post first.
+    public LinkedList<String> displayUserPosts(User user, User u1, ConnectionGraph<String> graph, LinkedList<String> history){
         try{
-            ArrayList<Post> yourPosts = database.getUserPosts(user, u1, graph);
+            ArrayList<Post> yourPosts = database.getUserPosts(user, u1, graph);     // Get ArrayList of arranged user posts with the newest post in front.
             System.out.println("<" + yourPosts.size() + " posts>");
             System.out.println("-------------------------");
             int choice = 1;
@@ -375,10 +410,10 @@ public class PostManagement {
                 while(choice!=-1){
                     System.out.println("No posts yet");
                     System.out.println("-------------------------");
-                    if(u1.getUsername().equals(user.getUsername()))
-                        System.out.println("-1 - Back to Posts tab");
+                    if(u1.getUsername().equals(user.getUsername())) 
+                        System.out.println("-1 - Back to Posts tab");   // User viewing own page
                     else
-                        System.out.println("-1 - Back to Main page");
+                        System.out.println("-1 - Back to Main page");   // User viewing other user's page
                     System.out.println("*************************");
                     choice = sc.nextInt();
                     sc.nextLine();
@@ -388,7 +423,7 @@ public class PostManagement {
             
             while(choice>=0){
                 for(int i=0; i<yourPosts.size(); i++){
-                    yourPosts = database.getUserPosts(user, u1, graph);
+                    yourPosts = database.getUserPosts(user, u1, graph);     // Update the ArrayList of posts (able to handle conditions if the user has deleted post in the previous loop)
                     if(yourPosts.size()==0){
                         while(choice!=-1){
                             System.out.println("No posts yet");
@@ -402,8 +437,9 @@ public class PostManagement {
                             sc.nextLine();
                             System.out.println("*************************");
                         }
-                        break;
+                        break;  // Break for loop
                     }
+
                     ArrayList<String> likeList = database.getPostList(yourPosts.get(i), "likeList");
                     Post post = yourPosts.get(i);
                     Group group = null;
@@ -416,16 +452,17 @@ public class PostManagement {
                     viewPost(post);
                     
                     // Keep track of user viewed post
-                    if(history.contains(post.getPostID())){
+                    if(history.contains(post.getPostID())){     // If the history already contains the viewed post, the post will be pushed to the head of history.
                         history = history.remove(post.getPostID(), history);
                         history.addFirst(post.getPostID());
-                    }else
-                        history.addFirst(post.getPostID());
+                    }else   
+                        history.addFirst(post.getPostID());     // If the history doesnt contains the viewed post, the post will be added as the head of history.
 
                     if(i<yourPosts.size()-1)
                         System.out.println("0 - Next");
                     else
-                        System.out.println("0 - Refresh");
+                        System.out.println("0 - Refresh");  // When reached end of ArrayList of post, user are able to refresh and start over from the head of ArrayList.
+
                     boolean likeStatus = false;
                     for(String x : likeList){
                         if(x.equals(user.getUsername())){
@@ -442,17 +479,16 @@ public class PostManagement {
                     if(i!=0)
                         System.out.println("5 - Back");
                     if(post.getPostID().contains("G")){
-                        if(user.getAccountID().equals(post.getUserID()) || user.getAccountID().equals(group.getAdminID()))
-                            System.out.println("5 - Delete post");
+                        if(user.getAccountID().equals(post.getUserID()) || user.getAccountID().equals(group.getAdminID()))  // Creator of post or group admin
+                            System.out.println("6- Delete post");
                     }else{
-                        if(user.getAccountID().equals(post.getUserID()) || admin.isAdmin(user))
-                        System.out.println("5 - Delete post");
+                        if(user.getAccountID().equals(post.getUserID()) || admin.isAdmin(user)) // Creator of post or admin of Facebook
+                        System.out.println("6 - Delete post");
                     }
                     if(user.getUsername().equals(u1.getUsername()))
-                        // Check if user is viewing his own page or other users page
-                        System.out.println("-1 - Back to Posts tab");
-                    else
-                        System.out.println("-1 - Back to Main page");
+                        System.out.println("-1 - Back to Posts tab");   // User viewing own page
+                    else    
+                        System.out.println("-1 - Back to Main page");   // User viewing other user's page
                     System.out.println("*************************");
                     choice = sc.nextInt();
                     sc.nextLine();
@@ -473,7 +509,7 @@ public class PostManagement {
                             case 5: if(i!=0)
                                         i = i+2;
                                     break;
-                            case 6: if(post.getPostID().contains("G")){
+                            case 6: if(post.getPostID().contains("G")){     // Admin of Facebook is unable to remove group posts
                                         if( user.getAccountID().equals(post.getUserID()) || group.getAdminID().equals(user.getAccountID())){
                                             deleteGroupPost(post, group);
                                             history = history.remove(post.getPostID(), history);
@@ -489,14 +525,15 @@ public class PostManagement {
                                     }
                                     break;
                         }
-                        if(choice==2 || choice==4){
+                        
+                        if(choice==2 || choice==4){     // User select to view likes or comments.
                             System.out.println("0 - Back");
                             System.out.println("*************************");
                             choice = sc.nextInt();
                             sc.nextLine();
                             System.out.println("*************************");
                             i++;
-                        }else if(choice==6){
+                        }else if(choice==6){    // User select to delete post.
                             if(post.getPostID().contains("G")){
                                 if(user.getAccountID().equals(post.getUserID()) || user.getAccountID().equals(group.getAdminID())){
                                     System.out.println("Post successfully deleted");
@@ -510,8 +547,10 @@ public class PostManagement {
                                     choice = -1;    // Break loop
                                 }
                             }
-                        }else{
-                            i++;
+                        }else if(choice==0){    // User select to next or refresh.
+                            continue;
+                        }else{  // User select to like or comment or input out of bound.
+                            i--;
                         }
                     }
                     if(choice<0)
@@ -524,12 +563,13 @@ public class PostManagement {
             System.out.println("Invalid input");
             System.out.println("*************************");
             sc.nextLine();
-            displayPosts(user, u1, graph, history);
+            displayUserPosts(user, u1, graph, history);
         }
         System.out.println("Failed to display user posts");
         return history;
     }
 
+    // Method to display all group posts by priotizing newest post first.
     public LinkedList<String> displayGroupPosts(Group group, User user, LinkedList<String> history){
         try{
             ArrayList<Post> groupPosts = database.getGroupPosts(group);
@@ -640,6 +680,8 @@ public class PostManagement {
                                 System.out.println("*************************");
                                 choice = 0;
                             }
+                        }else if(choice==0){  
+                            continue;
                         }else{
                             i++;
                         }

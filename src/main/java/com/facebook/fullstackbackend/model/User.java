@@ -7,6 +7,7 @@ import com.facebook.fullstackbackend.repository.DatabaseSql;
 
 public class User {
     DatabaseSql<String> database;
+    // Total 22 attributes
     private String accountID;
     private String username;
     private String email;

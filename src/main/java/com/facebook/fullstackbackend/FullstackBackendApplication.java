@@ -77,6 +77,9 @@ public class FullstackBackendApplication {
                                 }
                         }
                 }catch(InputMismatchException e){
+                        System.out.println("*************************");
+                        System.out.println("Invalid input");
+                        System.out.println("*************************");
                         sc.nextLine();
                         startFacebook();
                 }

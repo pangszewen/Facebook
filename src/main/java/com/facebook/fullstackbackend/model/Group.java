@@ -3,6 +3,7 @@ package com.facebook.fullstackbackend.model;
 import java.util.ArrayList;
 
 public class Group {
+    // Total 8 attributes
     private String groupID;
     private String groupName;
     private String adminID;

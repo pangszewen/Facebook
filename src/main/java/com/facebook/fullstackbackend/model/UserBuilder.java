@@ -15,6 +15,8 @@ public class UserBuilder {
     Scanner sc = new Scanner(System.in);
     DatabaseSql<String> database = new DatabaseSql<>();
     DatabaseSql<Integer> databaseInt = new DatabaseSql<>();
+
+    // Total 22 attributes
     public String accountID;
     public String username;
     public String email;
@@ -39,7 +41,7 @@ public class UserBuilder {
     public ArrayList<String> groupInvitations = new ArrayList<>();
     
     public UserBuilder(){
-        this.accountID = null;
+        this.accountID = database.generateID("useraccount", "accountID");
         this.username = null;
         this.email = null;
         this.phoneNo = null;
@@ -52,6 +54,7 @@ public class UserBuilder {
     }
 
     public UserBuilder(String accountID, String username, String email, String phoneNo, String password, String role){
+        // Account ID is auto-generated.
         this.accountID = accountID;
         this.username = username;
         this.email = email;
@@ -64,9 +67,7 @@ public class UserBuilder {
         this.banStartDate = "";
     }
 
-    public void setAccountID(){
-        this.accountID = database.generateID("useraccount", "accountID");
-    }
+    // Getter and setter method.
     public void setAccountID(String accountID){
         this.accountID = accountID;
     }
@@ -140,6 +141,7 @@ public class UserBuilder {
     public void setGender(User.Gender gender){
         this.gender = gender;
     }
+    // Setter method used for user input and create user object.
     public void setGender(String gender){
         this.gender = User.Gender.valueOf(gender.toUpperCase());
     }
@@ -161,11 +163,11 @@ public class UserBuilder {
         return noOfFriends;
     }
 
-    // For edit user profile
+    // Setter method used for edit user profile.
     public void setHobbies(String hobbies){
         this.hobbies.add(hobbies);
     }
-    // For create user object
+    // Setter method used for create user object.
     public void setHobbies(ArrayList<String> hobbies){
         this.hobbies = hobbies;
     }
@@ -173,11 +175,11 @@ public class UserBuilder {
         return hobbies;
     }
 
-    // For edit user profile
+    // Setter method used for edit user profile.
     public void setJobs(String job){
         this.jobs.push(job);
     }
-    // For create user object
+    // Setter method used for create user object.
     public void setJobs(Stack<String> jobs){
         this.jobs = jobs;
     }
@@ -185,9 +187,11 @@ public class UserBuilder {
         return jobs;
     }
 
+    // Setter method used for adding friend requests.
     public void setRequestList(String username){
         this.requestList.push(username);
     }
+    // Setter method used for create user object.
     public void setRequestList(Stack<String> requestList){
         this.requestList = requestList;
     }
@@ -223,58 +227,62 @@ public class UserBuilder {
         return banStartDate;
     }
 
-    public void setGroups(ArrayList<String> groups){
-        this.groups = groups;
-    }
+    // Setter method used for adding group when joining a group.
     public void setGroups(String group){
         this.groups.add(group);
+    }
+    // Setter method used for create user object.
+    public void setGroups(ArrayList<String> groups){
+        this.groups = groups;
     }
     public ArrayList<String> getGroups(){
         return groups;
     }
 
-    public void setGroupInvitations(ArrayList<String> groupInvitations){
-        this.groupInvitations = groupInvitations;
-    }
+    // Setter method used to send group invitation to a user. This method is used when inviting group member-to-be.
     public void setGroupInvitations(User inviter, Group group){
         String str = inviter.getAccountID() + ":" + group.getGroupID();
         this.groupInvitations.add(str);
+    }
+    // Setter method used for create user object.
+    public void setGroupInvitations(ArrayList<String> groupInvitations){
+        this.groupInvitations = groupInvitations;
     }
     public ArrayList<String> getGroupInvitations(){
         return groupInvitations;
     }
 
-    // to create User object
+    // Method to create User object.
     public User build(){
         return new User(this);
     }
 
-    // Edit account details
+    // Method to edit user's password.
     public User editPassword(User user){
         try{
             user = database.getAccount(user.getUsername());
+            // For verification purpose, user must be able to enter his old password correctly.
             System.out.print("Enter your old password: ");
             String oldPassword = sc.nextLine();
-
+            System.out.println("*************************");
             while(!database.hashPassword(oldPassword).equals(user.getPassword())){
                 System.out.println("Wrong password. Please enter again.");
-                //System.out.println("Enter 0 to exit.");
                 System.out.print("Old password: ");
                 oldPassword = sc.nextLine();
-                //if(oldPassword.equals("0"))
-                //    return user;
+                System.out.println("*************************");
             }
 
             System.out.print("Enter your new password: ");
             String newPassword = sc.nextLine();
-            while(!verifyPassword(newPassword)){   // Check strength of password
+            System.out.println("*************************");
+            while(!verifyPassword(newPassword)){   // Check strength of password.
                 System.out.print("New password: ");
                 newPassword = sc.nextLine();
+                System.out.println("*************************");
             }
 
             int choice = 2;
             while(choice!=0 && choice!=1){
-                System.out.println("-------------------------");
                 System.out.println("0 - Back");
                 System.out.println("1 - Confirm changes");
                 System.out.println("*************************");
@@ -283,17 +291,14 @@ public class UserBuilder {
                 System.out.println("*************************");
             }
             if(choice==1){
-                // Hashing the new password
+                // Hashing the new password.
                 newPassword = database.hashPassword(newPassword);
 
-                // Update user object
+                // Update user object.
                 user.setPassword(newPassword);
 
-                // Update to database
+                // Update to database.
                 database.updateUserAccount(user, "password", newPassword);
-
-                // Get back the user object
-                user = database.getProfile(user.getUsername());
             }
             return user;
         }catch(InputMismatchException e ){
@@ -303,18 +308,21 @@ public class UserBuilder {
             sc.nextLine();
             editPassword(user);
         }
+        System.out.println("Failed to edit password");
         return user;
     }
 
+    // Method to edit user's name.
     public User editName(User user){
         try{
+            // Display current name and prompt user to enter the new name.
             System.out.println("Current name: " + user.getName());
             System.out.print("Change name to: ");
             String name = sc.nextLine();
+            System.out.println("*************************");
             
             int choice = 2;
             while(choice!=0 && choice!=1){
-                System.out.println("-------------------------");
                 System.out.println("0 - Back");
                 System.out.println("1 - Confirm changes");
                 System.out.println("*************************");
@@ -337,22 +345,26 @@ public class UserBuilder {
             sc.nextLine();
             editName(user);
         }
+        System.out.println("Failed to edit name");
         return user;
     }
 
+    // Method to edit user's birthday and age.
     public User editBirthday(User user){
         try{
+            // Display current birthday and prompt user to enter new birthday.
             System.out.println("Current birthday: " + user.getBirthday());
             System.out.print("Change birthday to: ");
             String birthday = sc.nextLine();
-            while(!validateBirthdayFormat(birthday)){
+            System.out.println("*************************");
+            while(!validateBirthdayFormat(birthday)){   // Validation of birthday input format.
                 System.out.print("Change birthday to (format: YYYY-MM-DD): ");
                 birthday = sc.nextLine();
+                System.out.println("*************************");
             }
 
             int choice = 2;
             while(choice!=0 && choice!=1){
-                System.out.println("-------------------------");
                 System.out.println("0 - Back");
                 System.out.println("1 - Confirm changes");
                 System.out.println("*************************");
@@ -361,16 +373,16 @@ public class UserBuilder {
                 System.out.println("*************************");
             }
             if(choice==1){
-                // Update user object
+                // Update user object.
                 user.setBirthday(birthday);
 
-                // Update age based on birthday
+                // Update age based on birthday.
                 LocalDate currentDate = LocalDate.now();
                 Period period = Period.between(LocalDate.parse(birthday), currentDate);
                 int age = period.getYears();
                 user.setAge(age);
 
-                // Update to database
+                // Update to database.
                 database.updateUserProfile(user, "birthday", birthday);
                 databaseInt.updateUserProfile(user, "age", age);
             }
@@ -382,18 +394,21 @@ public class UserBuilder {
             sc.nextLine();
             editBirthday(user);
         }
+        System.out.println("Failed to edit birthday and age");
         return user;
     }
 
+    // Method to edit user's address.
     public User editAddress(User user){
         try{
+            // Display current address and prompt user to enter new address.
             System.out.println("Current address: " + user.getAddress());
             System.out.print("Change address to: ");
             String address = sc.nextLine();
+            System.out.println("*************************");
 
             int choice = 2;
             while(choice!=0 && choice!=1){
-                System.out.println("-------------------------");
                 System.out.println("0 - Back");
                 System.out.println("1 - Confirm changes");
                 System.out.println("*************************");
@@ -402,10 +417,10 @@ public class UserBuilder {
                 System.out.println("*************************");
             }
             if(choice==1){
-                // Update user object
+                // Update user object.
                 user.setAddress(address);
 
-                // Update to database
+                // Update to database.
                 database.updateUserProfile(user, "address", address);
             }
             return user;
@@ -416,18 +431,21 @@ public class UserBuilder {
             sc.nextLine();
             editAddress(user);
         }
+        System.out.println("Failed to edit address");
         return user;
     }
 
+    // Method to edit user's gender.
     public User editGender(User user){
         try{
+            // Display current gender and prompt user to enter gender (female/male).
             System.out.println("Current gender: " + user.getGender());
             System.out.print("Change gender to (MALE/FEMALE): ");
             String gender = sc.nextLine();
+            System.out.println("*************************");
 
             int choice = 2;
             while(choice!=0 && choice!=1){
-                System.out.println("-------------------------");
                 System.out.println("0 - Back");
                 System.out.println("1 - Confirm changes");
                 System.out.println("*************************");
@@ -450,21 +468,24 @@ public class UserBuilder {
             sc.nextLine();
             editGender(user);
         }
+        System.out.println("Failed to edit gender");
         return user;
     }
 
+    // Method to edit user's relationship status.
     public User editStatus(User user){
         try{
+            // Display the current relationship status and prompt user to enter new relationship status.
             if(user.getStatus().length()>0){
                 System.out.println("Current relationship status: " + user.getStatus());
                 System.out.print("Change status to: ");
-            }else
+            }else   // Condition if the user's relationship status is not applicable.
                 System.out.print("Relationship status: ");
             String status = sc.nextLine();
+            System.out.println("*************************");
 
             int choice = 2;
             while(choice!=0 && choice!=1){
-                System.out.println("-------------------------");
                 System.out.println("0 - Back");
                 System.out.println("1 - Confirm changes");
                 System.out.println("*************************");
@@ -473,10 +494,10 @@ public class UserBuilder {
                 System.out.println("*************************");
             }
             if(choice==1){
-                // Update user object
+                // Update user object.
                 user.setStatus(status);
 
-                // Update to database
+                // Update to database.
                 database.updateUserProfile(user, "status", status);
             }
             return user;
@@ -487,13 +508,16 @@ public class UserBuilder {
             sc.nextLine();
             editStatus(user);
         }
+        System.out.println("Failed to edit relationship status");
         return user;
     }
 
+    // Method to edit user's hobbies.
     public User editHobbies(User user){
         try{
             int choice = 1;
             while(choice!=0){
+                // Display current hobby and prompt user to select whether to add, change or delete hobby.
                 System.out.println("Current hobby: " + user.getHobbies().get(0));
                 System.out.println("0 - Back");
                 System.out.println("1 - Add hobby");
@@ -507,7 +531,7 @@ public class UserBuilder {
                     case 1: System.out.print("New hobby: ");
                             String hobby = sc.nextLine();
                             System.out.println("*************************");
-                            // Update user object
+                            // Add new hobby to user object.
                             user.getHobbies().add(hobby);
                             break;
 
@@ -520,14 +544,16 @@ public class UserBuilder {
                                 System.out.println("*************************");
                                 choice = sc.nextInt();
                                 System.out.println("*************************");
-                                // Update user object
-                                // Change the desired hobby to be in index 0
-                                String temp = user.getHobbies().get(choice-1);
-                                user.getHobbies().set(choice-1, user.getHobbies().get(0));
-                                user.getHobbies().set(0, temp);
+
+                                // Change the desired hobby to be in index 0 and update user object.
+                                if(choice!=0){
+                                    String temp = user.getHobbies().get(choice-1);
+                                    user.getHobbies().set(choice-1, user.getHobbies().get(0));
+                                    user.getHobbies().set(0, temp);
+                                }
                             }
                             if(choice==0)
-                                choice = 1;
+                                choice = 1;     // Maintain in loop.
                             break;
 
                     case 3: while(choice!=0){
@@ -539,14 +565,16 @@ public class UserBuilder {
                                 System.out.println("*************************");
                                 choice = sc.nextInt();
                                 System.out.println("*************************");
-                                // Update user object
-                                user.getHobbies().remove(choice-1);
+
+                                // Delete hobby from user object.
+                                if(choice!=0)
+                                    user.getHobbies().remove(choice-1);
                             }
                             if(choice==0)
-                                choice = 1;
+                                choice = 1;     // Maintain in loop.
                             break;
                 }
-                // Update to database
+                // Update to database.
                 String hobbies = String.join(",", user.getHobbies());
                 database.updateUserProfile(user, "hobbies", hobbies);
             }
@@ -558,20 +586,25 @@ public class UserBuilder {
             sc.nextLine();
             editHobbies(user);
         }
+        System.out.println("Failed to edit hobbies");
         return user;
     }
 
+    // Method to edit user's jobs.
     public User editJobs(User user){
         try{
             int choice = 1;
             while(choice!=0){
                 Stack<String> jobStack = user.getJobs();
+
+                // Display current job and previous job (if available) and prompt user to select whether to add or delete job.
                 if(!jobStack.empty()){
                     String currentJob = jobStack.pop();
                     System.out.println("Current job: " + currentJob);
+                    // Only display if previous job is available.
                     if(!jobStack.empty())
                         System.out.println("Previous job: " + jobStack.peek());
-                    jobStack.push(currentJob);
+                    jobStack.push(currentJob);  // Restore the job stack
                 }
                 System.out.println("0 - Back");
                 System.out.println("1 - Add job");
@@ -584,25 +617,45 @@ public class UserBuilder {
                 switch(choice){
                     case 1: System.out.print("New job: ");
                             String currentJob = sc.nextLine();
-                            jobStack.push(currentJob);
+                            System.out.println("*************************");
+                            while(choice!=0){
+                                System.out.println("0 - Back");
+                                System.out.println("1 - Confirm changes");
+                                System.out.println("*************************");
+                                choice = sc.nextInt();
+                                System.out.println("*************************");
+                            }
+                            if(choice==1)
+                                jobStack.push(currentJob);  // Push new job into the stack
+                            if(choice==0)
+                                choice = 1;     // Maintain in loop
                             break;
 
-                    case 2: System.out.println("Delete job: ");
-                            Stack<String> tempStack = new Stack<>();
-                            int count = 1;
-                            while(!jobStack.empty()){
-                                System.out.println(count + " - " + jobStack.peek());
-                                tempStack.push(jobStack.pop());
-                                count++;
-                            }
-                            choice = sc.nextInt();
-                            count = tempStack.size();
-                            while(!tempStack.empty()){
-                                if(count!=choice)
-                                    jobStack.push(tempStack.pop());
-                                else
-                                    tempStack.pop();
-                                count--;
+                    case 2: while(choice!=0){
+                                System.out.println("Delete job: ");
+                                Stack<String> tempStack = new Stack<>();
+                                int count = 1;
+                                System.out.println("0 - Back");
+                                // Display all user's job by printing the latest job first.
+                                while(!jobStack.empty()){
+                                    System.out.println(count + " - " + jobStack.peek());
+                                    tempStack.push(jobStack.pop());
+                                    count++;
+                                }
+                                System.out.println("*************************");
+                                choice = sc.nextInt();
+                                System.out.println("*************************");
+                                //If input is in range, proceed to delete the selected job.
+                                if(choice>0 && choice<tempStack.size()+1){
+                                    count = tempStack.size();
+                                    while(!tempStack.empty()){
+                                        if(count!=choice)
+                                            jobStack.push(tempStack.pop());
+                                        else
+                                            tempStack.pop();
+                                        count--;
+                                    }
+                                }
                             }
                             break;
                 }
@@ -612,8 +665,6 @@ public class UserBuilder {
                 // Update to database
                 String jobs = String.join(",", jobStack);
                 database.updateUserProfile(user, "jobs", jobs);
-                
-                System.out.println("*************************");
             }
             return user;
         }catch(InputMismatchException e ){
@@ -623,24 +674,29 @@ public class UserBuilder {
             sc.nextLine();
             editJobs(user);
         }
+        System.out.println("Failed to edit jobs");
         return user;
     }
 
+    // Method to check if the user is banned from using Facebook.
     public boolean isBanned(User user){
         if(user.getBanStartDate().equals(""))
             return false;
+
         Period duration  = Period.parse(user.getBanDuration());
         LocalDate startDate = LocalDate.parse(user.getBanStartDate());
         Period difference = Period.between(startDate, LocalDate.now());
-        if(difference.getDays()>duration.getDays()){
+        
+        if(difference.getDays()>duration.getDays()){    // User's ban duration is over, reset the user's ban duration and ban start date.
             user.setBanDuration("P0Y0M0D");
             user.setBanStartDate("");
             database.updateUserProfile(user, "banDuration", user.getBanDuration());
             database.updateUserProfile(user, "banStartDate", user.getBanStartDate());
             return false;
-        }else{
+        }else{      // User is still banned from using Facebook
             String banDuration = null;
             LocalDate endDate = null;
+            // Get the end date of ban duration from start date.
             if(user.getBanDuration().equals("P1Y")){
                 banDuration = "ONE YEAR";
                 endDate = startDate.plusYears(1);
@@ -666,7 +722,7 @@ public class UserBuilder {
         }
     }
 
-    //To check the remaining banned time of any user
+    // Method to check the remaining banned time of any user
     public String getRemainingBannedTime(User user, LocalDate endDate) {
             LocalDate currentDate = LocalDate.now();
             Period difference = Period.between(currentDate, endDate);
@@ -693,6 +749,7 @@ public class UserBuilder {
             return str;
     }
 
+    // Method to test the strength of password.
     public boolean verifyPassword(String password){
         // Check password length
         if(password.length()<8){
@@ -735,6 +792,7 @@ public class UserBuilder {
         }
     }
 
+    // Method to verify the validation of user input for gender.
     public boolean verifyGender(String gender){
         if(gender.toLowerCase().equals("female") || gender.toLowerCase().equals("male"))
             return true;
@@ -744,6 +802,7 @@ public class UserBuilder {
         }
     }
 
+    // Method to verify the validation of user input for birthday.
     public boolean validateBirthdayFormat(String birthday) {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
         

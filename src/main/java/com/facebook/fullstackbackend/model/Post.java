@@ -1,6 +1,7 @@
 package com.facebook.fullstackbackend.model;
 
 public class Post {
+    // Total 7 attributes
     private String postID;
     private String userID;
     private Status status;

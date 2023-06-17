@@ -13,6 +13,7 @@ import java.util.Scanner;
 
 import com.facebook.fullstackbackend.repository.DatabaseSql;
 
+// All the chats are stored in text files, due to limitations in size of storage in SQL database.
 public class Chat {
     Scanner sc = new Scanner(System.in);
     DatabaseSql<String> database = new DatabaseSql<>();
@@ -27,7 +28,7 @@ public class Chat {
         String fileName = pathToPackage + nameGroupChat(group);
         createChat(fileName);
     }
-
+    // Method used to create a new text file.
     public void createChat(String fileName){
         try(BufferedWriter writer = new BufferedWriter(new FileWriter(fileName, true))) {
 
@@ -45,7 +46,7 @@ public class Chat {
     public void readGroupChat(Group group){
         readChat(nameGroupChat(group));
     }
-
+    // Method used to read a text file.
     public void readChat(String fileName){
         fileName = pathToPackage + fileName;
         String previousDate = null;
@@ -70,19 +71,30 @@ public class Chat {
         }
     }
 
+    // Method used to display a user's chat name.
     public void displayUserChatName(String textFileName, User user){
         String textFile = textFileName.substring(0, textFileName.length()-4);
         String[] arr = textFile.split("C");
-        if(arr[0].equals(user.getAccountID()))
-            System.out.println(database.getProfile(arr[1]).getName());
-        else
-            System.out.println(database.getProfile(arr[0]).getName());
+        if(arr[0].equals(user.getAccountID())){
+            if(database.verifyUserExist(arr[1]))
+                System.out.println("\u001B[1m" + database.getProfile(arr[1]).getName() + "\u001B[0m");
+            else    
+                System.out.println("Deleted User");
+        }else{
+            if(database.verifyUserExist(arr[0]))
+                System.out.println("\u001B[1m" + database.getProfile(arr[0]).getName() + "\u001B[0m");
+            else    
+                System.out.println("Deleted User");
+        }
         System.out.println("-------------------------");
     }
-
+    // Method used to display a group's chat name.
     public void displayGroupChatName(String textFileName){
         String textFile = textFileName.substring(0, textFileName.length()-4);
-        System.out.println(database.getGroup(textFile).getGroupName());
+        if(database.verifyGroupExists(textFile))
+            System.out.println("\u001B[1m" + database.getGroup(textFile).getGroupName() + "\u001B[0m");
+        else
+            System.out.println("Deleted Group");
         System.out.println("-------------------------");
     }
 
@@ -93,7 +105,7 @@ public class Chat {
     public void updateGroupChat (User user, Group group){
         updateChat(user, nameGroupChat(group));
     }
-
+    // Method used to update new chat conversations into its respective text file.
     public void updateChat(User user, String fileName){
         fileName = pathToPackage + fileName;
         try(BufferedWriter writer = new BufferedWriter(new FileWriter(fileName, true))) {
@@ -117,6 +129,7 @@ public class Chat {
         }
     }
 
+    // Method to get all the chats of user.
     public ArrayList<String> getUserChats(User user){
         String packagePath = "C:\\Users\\HP PAVILION\\Documents\\UM Y1 S2\\DS\\fullstack-backend\\src\\main\\java\\com\\facebook\\fullstackbackend\\repository\\Chats";
         File directory = new File(packagePath);
@@ -133,25 +146,37 @@ public class Chat {
             }
         }
 
-        ArrayList<String> arrangedTextFiles = dateTimeComparison(textFiles);
+        ArrayList<String> arrangedTextFiles = dateTimeComparison(textFiles);    // The chats are arranged up-to-date.
         return arrangedTextFiles;        
     }
 
+    // Method to display all the chats of user.
     public void displayAllChats(ArrayList<String> arrangedTextFiles, User user){
         for(int i=0; i<arrangedTextFiles.size(); i++){
             String textFilesName = arrangedTextFiles.get(i).substring(0, arrangedTextFiles.get(i).length()-4);
             if(arrangedTextFiles.get(i).contains("C")){
                 String[] arr = textFilesName.split("C");
-                if(arr[0].equals(user.getAccountID()))
-                    System.out.println((i+1) + " - " + database.getProfile(arr[1]).getName());
-                else
-                    System.out.println((i+1) + " - " + database.getProfile(arr[0]).getName());
+                if(arr[0].equals(user.getAccountID())){
+                    if(database.verifyUserExist(arr[1]))
+                        System.out.println((i+1) + " - " + database.getProfile(arr[1]).getName());
+                    else    
+                        System.out.println((i+1) + " - Deleted User");
+                }else{
+                    if(database.verifyUserExist(arr[0]))
+                        System.out.println((i+1) + " - " + database.getProfile(arr[0]).getName());
+                    else
+                        System.out.println((i+1) + " - Deleted User");
+                }
             }else{
-                System.out.println((i+1) + " - " + database.getGroup(textFilesName).getGroupName());
+                if(database.verifyGroupExists(textFilesName))
+                    System.out.println((i+1) + " - " + database.getGroup(textFilesName).getGroupName());
+                else
+                    System.out.println((i+1) + " - Deleted Group");
             }
         }
     }
 
+    // Method used to arranged the chats of user in messenger so that it is up-to-date (the recently updated conversation is arranged first)
     public ArrayList<String> dateTimeComparison(ArrayList<String> textFiles) {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
         for(int i=1; i<textFiles.size(); i++){
@@ -185,6 +210,7 @@ public class Chat {
         return textFiles;
     }
 
+    // Method to get the date of the last conversation in a text file.
     public String getLastDateOfFile(String filePath) {
         String lastLine = null;
 
@@ -201,6 +227,7 @@ public class Chat {
         return lastLine;
     }
 
+    // Method to name a user chat text file.
     public String nameUserChat (User user, User u1){
         int id1 = Integer.parseInt(user.getAccountID());
         int id2 = Integer.parseInt(u1.getAccountID());
@@ -215,6 +242,7 @@ public class Chat {
         return fileName;
     }
 
+    // Method used to name a group chat text file.
     public String nameGroupChat(Group group){
         String fileName = group.getGroupID() + ".txt";
         return fileName;
@@ -236,5 +264,18 @@ public class Chat {
             return true;
         else    
             return false;
+    }
+
+    public boolean verifyAbilityToUpdateChat(String textFile){
+        String textFileName = textFile.substring(0, textFile.length()-4);
+        if(textFileName.contains("C")){
+            String[] arr = textFileName.split("C");
+            if(database.verifyUserExist(arr[0]) && database.verifyUserExist(arr[1]))
+                return true;            
+        }else{
+            if(database.verifyGroupExists(textFileName))
+                return true;
+        }
+        return false;
     }
 }

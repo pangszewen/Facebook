@@ -15,11 +15,12 @@ public class UsersConnection {
     ConnectionGraph<String> graph = new ConnectionGraph<>();
     Chat chat = new Chat();
 
-    // Add new user as vertex to graph
+    // Method to add new user as vertex to graph.
     public ConnectionGraph<String> registerGraph(ConnectionGraph<String> graph, String username){
         return graph.registerVertex(graph, username);
     }
 
+    // Method to view a user's account details.
     public void viewAccount(User user){
         System.out.println("\tAbout");
         System.out.println("-------------------------");
@@ -42,13 +43,14 @@ public class UsersConnection {
         System.out.println("Hobby: " + user.getHobbies().get(0));
         String currentJob = user.getJobs().pop();
         System.out.println("Current job: " + currentJob);
-        if(user.getJobs().size()>1){
+        if(user.getJobs().size()>1){    // Display previous job if available.
             System.out.println("Previous job: " + user.getJobs().peek());
         }
         user.getJobs().push(currentJob);
         System.out.println("*************************");            
     }
 
+    // Method to edit account details by user.
     public User editAccount(User user){
         try{
             int choice = 1;
@@ -91,6 +93,7 @@ public class UsersConnection {
         return user;
     }
 
+    // Method to get the mutual friends between two users.
     public ArrayList<User> getMutual(User u1, User u2, ConnectionGraph<String> graph){
         ArrayList<User> mutual = new ArrayList<>();
         String v1 = graph.getVertex(graph, u1.getUsername());
@@ -108,16 +111,15 @@ public class UsersConnection {
         return mutual;
     }
 
+    // Method to get the total number of mutual friends between two users.
     public int getTotalMutual(User u1, User u2, ConnectionGraph<String> graph){
         ArrayList<User> mutual = getMutual(u1, u2, graph);
         return mutual.size();
     }
 
-    // Return ArrayList of recommended users
-    // Not used in test class
-    public ArrayList<User> recommendedUser(User u1, ConnectionGraph<String> graph){
+    // Method to get the recommended users.
+    public ArrayList<User> recommendedUser(User user, ConnectionGraph<String> graph){
         ArrayList<User> recomUser = new ArrayList<>();
-        ArrayList<Integer> mutualNo = new ArrayList<>();
         ArrayList<String> v = graph.getAllVertices(graph);
 
         for(int i=0; i<v.size(); i++){
@@ -125,33 +127,31 @@ public class UsersConnection {
             if(database.isSetup(v.get(i))){
 
                 // User himself and his friends are not included in recommendation list
-                if(!v.get(i).equals(u1.getUsername()) && !graph.hasEdge(graph, u1.getUsername(), v.get(i))){
-                    User u2 = database.getProfile(v.get(i));
+                if(!v.get(i).equals(user.getUsername()) && !graph.hasEdge(graph, user.getUsername(), v.get(i))){
+                    User u1 = database.getProfile(v.get(i));
                     // Users that have already reqeusted to be friend are not included in recommendation list
-                    if(!checkRequest(u1, u2)){
-                        int totalMutual = getTotalMutual(u1, u2, graph);
-                        recomUser.add(u2);
-                        mutualNo.add(totalMutual);
+                    if(!checkRequest(user, u1)){
+                        recomUser.add(u1);
                     }
                 }
             }
         }
-        for(int i=1; i<mutualNo.size(); i++){
+        for(int i=1; i<recomUser.size(); i++){
+            int mutualNo1 = getTotalMutual(user, recomUser.get(i), graph);
             for(int j=0; j<i; j++){
-                if(mutualNo.get(i).compareTo(mutualNo.get(j))>0){
-                    int temp1 = mutualNo.get(i);
-                    mutualNo.set(i, mutualNo.get(j));
-                    mutualNo.set(j, temp1);
-                    User temp2 = recomUser.get(i);
+                int mutualNo2 = getTotalMutual(user, recomUser.get(j), graph);
+                if(mutualNo1>mutualNo2){
+                    User temp = recomUser.get(i);
                     recomUser.set(i, recomUser.get(j));
-                    recomUser.set(j, temp2);
+                    recomUser.set(j, temp);
                 }
             }
         }
         return recomUser;
     }
     
-    // Use in test class to display recommended users
+    /*
+    // Method to display recommended users.
     public User displayRecommendedUsers(User u1, ConnectionGraph<String> graph){
         ArrayList<User> recomUser = recommendedUser(u1, graph);
         for(int i=1; i<=recomUser.size(); i++){
@@ -163,14 +163,16 @@ public class UsersConnection {
             return recomUser.get(choice-1);
         return null;
     }
+    */
 
-    // Add friend by sending reqeust
+    // Method to add friend by sending reqeust.
     public void sendRequest(User sender, User receiver){
         ArrayList<User> requestList = database.getRequestList(receiver);
         requestList.add(sender);
         database.updateRequestList(receiver, requestList);
     }
 
+    // Method to check the existence of friend request from a user to a user.
     public boolean checkRequest(User sender, User receiver){
         ArrayList<User> requestList = database.getRequestList(receiver);
         for(User x : requestList){
@@ -180,6 +182,7 @@ public class UsersConnection {
         return false;
     }
 
+    // Method to cancel friend request from a user to a user.
     public void cancelRequest(User sender, User receiver){
         ArrayList<User> requestList = database.getRequestList(receiver);
         ArrayList<String> username = new ArrayList<>();
@@ -194,7 +197,9 @@ public class UsersConnection {
         database.updateRequestList(receiver, requestList);
     }
 
+    // Method to confirm friend request.
     public ConnectionGraph<String> confirmRequest(User sender, User receiver, ConnectionGraph<String> graph){
+        // Update graph by adding new undirected edge
         graph = graph.addUndirectedEdge(graph, sender.getUsername(), receiver.getUsername());
 
         // Increment number of friends
@@ -207,6 +212,7 @@ public class UsersConnection {
 
         // Remove friend request from receiver's request list
         cancelRequest(sender, receiver);
+
         //Create chat
         if(!chat.verifyUserChatExist(sender, receiver))
             chat.createUserChat(sender, receiver);
@@ -214,7 +220,9 @@ public class UsersConnection {
         return graph;
     }
 
+    // Method to remove friend.
     public ConnectionGraph<String> removeFriend(User sender, User receiver, ConnectionGraph<String> graph){
+        // Update graph by removing undirected edge
         graph = graph.removeUndirectedEdge(graph, sender.getUsername(), receiver.getUsername());
 
         // Decrement number of friends
@@ -228,7 +236,7 @@ public class UsersConnection {
         return graph;
     }
 
-    // Display newest friends at top (ArrayList-loop from head of ArrayList)
+    // Method to display newest friends at top (ArrayList-loop from head of ArrayList)
     public ArrayList<String> displayNewestFriends(User user, User u1, ConnectionGraph<String> graph){
         ArrayList<String> friends = graph.getNeighbours(graph, u1.getUsername());
         System.out.println("<" + friends.size() + " friends>");
@@ -241,16 +249,18 @@ public class UsersConnection {
             else if(graph.hasEdge(graph, user.getUsername(), u.getUsername()))
                 title = "Friend";
             System.out.println(i + " - " + u.getName() + " \"" + title + "\"");
+            // User has no mutual friends with himself.
             if(!u.getUsername().equals(user.getUsername()))
-            System.out.println("(" + getTotalMutual(user, u, graph) + " mutuals)");
+                System.out.println("(" + getTotalMutual(user, u, graph) + " mutuals)");
             System.out.println("-------------------------");
         }
         return friends;
     }
 
-    // Display oldest friends at top (ArrayList-loop from tail of ArrayList)
+    // Method to display oldest friends at top (ArrayList-reverse the ArrayList)
     public ArrayList<String> displayOldestFriends(User user, User u1, ConnectionGraph<String> graph){
         ArrayList<String> friends = graph.getNeighbours(graph, u1.getUsername());
+        // ArrayList is reversed.
         Collections.reverse(friends);
         System.out.println("<" + friends.size() + " friends>");
         System.out.println("-------------------------");
@@ -262,6 +272,7 @@ public class UsersConnection {
             else if(graph.hasEdge(graph, user.getUsername(), u.getUsername()))
                 title = "Friend";
             System.out.println(i + " - " + u.getName() + " \"" + title + "\"");
+            // User has no mutual friends with himself.
             if(!u.getUsername().equals(user.getUsername()))
                 System.out.println("(" + getTotalMutual(user, u, graph) + " mutuals)");
             System.out.println("-------------------------");
@@ -269,19 +280,23 @@ public class UsersConnection {
         return friends;
     }
 
+    // Method to display friend requests to the user.
     public ConnectionGraph<String> displayRequest(User user, ConnectionGraph<String> graph){
         try{
             int choice = 1;
-            while(choice>0){
+            while(choice!=0){
                 ArrayList<User> requestList = database.getRequestList(user);
                 System.out.println("<" + requestList.size() + " friend requests>");
                 System.out.println("-------------------------");
+
+                // Condition if there is no friend requests
                 if(requestList.size()==0){
                     System.out.println("0 - Back");
                     System.out.println("*************************");
                     choice = sc.nextInt();
                     System.out.println("*************************");
                 }
+
                 for(int i=0; i<requestList.size(); i++){
                     System.out.println(requestList.get(i).getName());
                     System.out.println("(" + getTotalMutual(user, requestList.get(i), graph) + " mutuals)");
@@ -295,8 +310,10 @@ public class UsersConnection {
                     choice = sc.nextInt();
                     System.out.println("*************************");
 
-                    if(choice<0)
+                    if(choice<0){   
+                        choice=0;   // To break loop
                         break;
+                    }
 
                     switch(choice){
                         case 0: if(i!=requestList.size()-1)
@@ -319,18 +336,22 @@ public class UsersConnection {
             sc.nextLine();
             displayRequest(user, graph);
         }
+        System.out.println("Failed to display friend requests");
         return graph;
     }
 
+    // Method to start chat with other users.
     public void startUserChatting(User user, User u1){
         System.out.println(u1.getName());
         System.out.println("-------------------------");
         chat.readUserChat(user, u1);
         System.out.println("-------------------------");
+        
         chat.updateUserChat(user, u1);
         System.out.println("*************************");
     }
 
+    // Method to start chat in user's group.
     public void startGroupChatting(User user, Group group){
         System.out.println(group.getGroupName());
         System.out.println("-------------------------");

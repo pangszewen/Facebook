@@ -22,6 +22,7 @@ public class AccountManagement {
     boolean isAdmin = false;
     LinkedList<String> history;
 
+    // Method to register user.
     public void registration(){
         graph = new ConnectionGraph<>();
         System.out.println("Registration Form");
@@ -70,14 +71,10 @@ public class AccountManagement {
         }
         builder.setPassword(password);
 
-        // Get account ID
-        builder.setAccountID();
-        //builder = new UserBuilder(builder.getAccountID(), username, email, phoneNo, password, null);
-
         // Get user
         user = builder.build();
         
-        // Store user info into CSV file
+        // Store user info into database
         database.registerUser(user);
 
         // Add user to graph 
@@ -86,6 +83,7 @@ public class AccountManagement {
         System.out.println("*************************");
     }
 
+    // Method to login user.
     public User login(){
         graph = new ConnectionGraph<>();
         history = new LinkedList<>();
@@ -124,6 +122,7 @@ public class AccountManagement {
         return user; 
     }
 
+    // Method to setup user account.
     public User setupAccount(User user){
         builder.setAccountID(user.getAccountID());
         builder.setUsername(user.getUsername());
@@ -133,10 +132,12 @@ public class AccountManagement {
         builder.setRole(user.getRole());
 
         System.out.println("Please fill in the below information to get started!");
+        System.out.println("-------------------------");
 
         // Input name
         System.out.println("What is your name?");
         builder.setName(sc.nextLine());
+        System.out.println("-------------------------");
 
         //Input birthday
         System.out.println("When is your birthday? (format: YYYY-MM-DD)");
@@ -146,6 +147,7 @@ public class AccountManagement {
             System.out.println("When is your birthday? (format: YYYY-MM-DD)");
             builder.setBirthday(sc.nextLine());
         }
+        System.out.println("-------------------------");
         LocalDate birthday = LocalDate.parse(builder.getBirthday());
 
         // Calculate age based on birthday
@@ -156,6 +158,7 @@ public class AccountManagement {
         // Get address
         System.out.println("Where do you live?");
         builder.setAddress(sc.nextLine());
+        System.out.println("-------------------------");
 
         // Get gender
         System.out.println("What is your gender? (MALE/FEMALE)");
@@ -164,6 +167,7 @@ public class AccountManagement {
             System.out.println("What is your gender? (MALE/FEMALE)");
             gender = sc.nextLine();
         }
+        System.out.println("-------------------------");
         builder.setGender(gender);
 
         // Initialize number of friends
@@ -172,6 +176,7 @@ public class AccountManagement {
         // Get relationship status
         System.out.println("What is your relationship status?");
         builder.setStatus(sc.nextLine());
+        System.out.println("-------------------------");
 
         // Get hobbies (ArrayList)
         System.out.println("What are your hobbies?");
@@ -185,10 +190,12 @@ public class AccountManagement {
             choice = sc.next().charAt(0);
             sc.nextLine();
         }
+        System.out.println("-------------------------");
 
         // Get job (Stack)
         System.out.println("What is your current job?");
-        builder.setJobs(sc.nextLine());     
+        builder.setJobs(sc.nextLine());
+        System.out.println("-------------------------");     
 
         // Done setup account
         System.out.println("That's all for the account setup. You are now ready to explore Facebook!");
@@ -196,6 +203,7 @@ public class AccountManagement {
         return builder.build();
     }
 
+    // Method to view own page.
     public void viewMyPage(){
         try{
             int choice = 1;
@@ -207,7 +215,7 @@ public class AccountManagement {
                 System.out.println("2 - About");
                 System.out.println("3 - Friends");
                 System.out.println("4 - Groups");
-                if(isAdmin)
+                if(isAdmin)    
                     System.out.println("5 - Admin authorities");
                 System.out.println("*************************");
                 choice = sc.nextInt();
@@ -227,7 +235,7 @@ public class AccountManagement {
                                 switch(choicePost){
                                     case 1: user = postManager.createUserPost(user);
                                             break;
-                                    case 2: history = postManager.displayPosts(user, user, graph, history);
+                                    case 2: history = postManager.displayUserPosts(user, user, graph, history);
                                             break;
                                 }
                             }
@@ -294,16 +302,16 @@ public class AccountManagement {
                                 int choiceAdmin = 1;
                                 while(choiceAdmin>0){
                                     System.out.println("0 - Back");
-                                    System.out.println("1 - Ban user");
-                                    System.out.println("2 - Delete user");
-                                    System.out.println("3 - Set user as admin");
+                                    System.out.println("1 - Search to ban user");
+                                    System.out.println("2 - Search to delete user");
+                                    System.out.println("3 - Search to set user as admin");
                                     System.out.println("4 - Add new prohibited words");
                                     System.out.println("*************************");
                                     choiceAdmin = sc.nextInt();
                                     sc.nextLine();
                                     System.out.println("*************************");
                                     switch(choiceAdmin){
-                                        case 1,2,3 -> searchUsers();
+                                        case 1,2,3 -> searchUsers();        // The Admin Authorities tab will display in the user's page, then you can take action.
                                         case 4 -> admin.updateProhibitedWord();
                                     }
                                 }
@@ -311,6 +319,8 @@ public class AccountManagement {
                 }
             }
         }catch(InputMismatchException e){
+            System.out.println("*************************");
+            System.out.println("Invalid input");
             System.out.println("*************************");
             sc.nextLine();
             viewMyPage();
@@ -363,7 +373,7 @@ public class AccountManagement {
                 sc.nextLine();
                 System.out.println("*************************");
                 switch(choice){
-                    case 1: history = postManager.displayPosts(user, u1, graph, history);
+                    case 1: history = postManager.displayUserPosts(user, u1, graph, history);
                             break;
 
                     case 2: int choiceAbout = 1;
@@ -415,9 +425,9 @@ public class AccountManagement {
                             }
                             break;
 
-                    case 5: if(!chat.verifyUserChatExist(user, u1))
+                    case 5: if(!chat.verifyUserChatExist(user, u1))     // If chat does not exist yet, then create chat.
                                 chat.createUserChat(user, u1);
-                            connection.startUserChatting(user, u1);
+                            connection.startUserChatting(user, u1);     
                             break;
                     
                     case 6: if(isAdmin){
@@ -428,7 +438,7 @@ public class AccountManagement {
                                     System.out.println("0 - Back");
                                     System.out.println("1 - Ban user");
                                     System.out.println("2 - Delete user");
-                                    if(!admin.isAdmin(u1))
+                                    if(!admin.isAdmin(u1))      // If the other user is already an admin, there will be no selection for set as admin.
                                         System.out.println("3 - Set as admin");
                                     System.out.println("*************************");
                                     choiceAdmin = sc.nextInt();
@@ -562,6 +572,7 @@ public class AccountManagement {
                                                 groupManager.removeMember(group);
                                             break;
                                 }
+                                group = database.getGroup(group.getGroupID());
                             }
                             break;
                     
@@ -620,27 +631,47 @@ public class AccountManagement {
     }
 
     public void messenger(){
-        int choice = 1;
-        while(choice!=0){
-            ArrayList<String> textFiles = chat.getUserChats(user);
-            System.out.println("Messenger");
-            System.out.println("-------------------------");
-            System.out.println("0 - Back");
-            chat.displayAllChats(textFiles, user);
-            System.out.println("*************************");
-            choice = sc.nextInt();
-            sc.nextLine();
-            System.out.println("*************************");
-            if(choice>0 && choice<textFiles.size()+1){
-                if(textFiles.get(choice-1).contains("C"))
-                    chat.displayUserChatName(textFiles.get(choice-1), user);
-                else    
-                    chat.displayGroupChatName(textFiles.get(choice-1));
-                chat.readChat(textFiles.get(choice-1));
+        try{
+            int choice = 1;
+            while(choice!=0){
+                ArrayList<String> textFiles = chat.getUserChats(user);
+                System.out.println("Messenger");
                 System.out.println("-------------------------");
-                chat.updateChat(user, textFiles.get(choice-1));
+                System.out.println("0 - Back");
+                chat.displayAllChats(textFiles, user);
                 System.out.println("*************************");
+                choice = sc.nextInt();
+                sc.nextLine();
+                System.out.println("*************************");
+                int choiceChat = choice;
+                while(choiceChat!=0){
+                    if(choice>0 && choice<textFiles.size()+1){
+                        String name = textFiles.get(choice-1);
+                        if(name.contains("C"))
+                            chat.displayUserChatName(name, user);
+                        else    
+                            chat.displayGroupChatName(name);
+                        chat.readChat(name);
+                        System.out.println("-------------------------");
+                        if(chat.verifyAbilityToUpdateChat(name)){
+                            chat.updateChat(user, name);
+                            System.out.println("*************************");
+                            break;
+                        }else{
+                            System.out.println("0 - Back");
+                            System.out.println("*************************");
+                            choiceChat = sc.nextInt();
+                            System.out.println("*************************");
+                        }
+                    }
+                }
             }
+        }catch(InputMismatchException e){
+            System.out.println("*************************");
+            System.out.println("Invalid input");
+            System.out.println("*************************");
+            sc.nextLine();
+            messenger();
         }
     }
 
@@ -1332,7 +1363,7 @@ public class AccountManagement {
                     System.out.println("*************************");
                     switch(choiceInvite){
                         case 1 -> viewGroupPage(group);
-                        case 2 -> groupManager.confirmInvitation(group, user);
+                        case 2 -> groupManager.joinGroup(group, user);
                         case 3 -> groupManager.deleteInvitation(group.getGroupID(), user);
                     }
                 }

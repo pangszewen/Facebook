@@ -14,6 +14,7 @@ public class Admin {
     DatabaseSql<String> database = new DatabaseSql<>();
     UserBuilder builder = new UserBuilder();
 
+    // Method to set normal user as admin of Facebook.
     public User setAdmin(User user){
         user.setRole("admin");
         database.updateUserAccount(user, "role", user.getRole());
@@ -23,7 +24,7 @@ public class Admin {
         return user;
     }
 
-    // Check if the given user is an admin
+    // Method to check if the given user is an admin
     public boolean isAdmin(User user){
         if(user.getRole().equalsIgnoreCase("admin"))
             return true;
@@ -31,16 +32,54 @@ public class Admin {
             return false;
     }
 
+    // Method to delete a user from Facebook.
     public ConnectionGraph<String> deleteAccount(User user, ConnectionGraph<String> graph){
         if(isAdmin(user)){
             System.out.println("***This user is an admin. Operation denied***");
             return graph;
         }
-        database.deleteAccount(user);
+        // Remove all user posts
+        removeAllUserPost(user);
+        // Remove user from all groups
+        removeUserFromAllGroups(user);
+        // Remove user from graph 
         graph.removeVertex(graph, user.getUsername());
+        // Delete user from database
+        database.deleteAccount(user);
+
         return graph;
     }
 
+     // Method used to remove user from all of his groups due to his account has been deleted from Facebook by admin.
+    public void removeUserFromAllGroups(User user){
+        ArrayList<String> groups = user.getGroups();
+        for(String x : groups){
+            Group group = database.getGroup(x);
+            if(!group.getAdminID().equals(user.getAccountID())){
+                ArrayList<String> members = group.getMembers();
+                members.remove(user.getAccountID());
+                group.setMembers(members);
+                group.setNoOfMembers(group.getNoOfMembers()-1);
+                database.updateGroup(group, "members", String.join(",", group.getMembers()));
+                DatabaseSql<Integer> databaseInt = new DatabaseSql<>();
+                databaseInt.updateGroup(group, "noOfMembers", group.getNoOfMembers());
+            }else{
+                database.deleteGroup(group);
+            }
+        }
+    }
+
+    // Method used to remove all posts created by user.
+    public void removeAllUserPost(User user){
+        ConnectionGraph<String> graph = new ConnectionGraph<>();
+        graph = graph.getGraph(graph);
+        ArrayList<Post> posts = database.getUserPosts(user, user, graph);
+        for(Post x : posts){
+            database.deletePost(x);
+        }
+    }
+
+    // Method to ban user from using Facebook for a specific duration.
     public void banUser(User user) {
         // Banning admin users are not allowed
         if(isAdmin(user)){
@@ -85,6 +124,7 @@ public class Admin {
         databaseInt.updateUserProfile(user, "noOfDeletedPost", user.getNoOfDeletedPost());
     }
 
+    // Method to add new prohibited words into database.
     public void updateProhibitedWord(){
         try{
             int choice = 2;
@@ -97,7 +137,7 @@ public class Admin {
                 String newWord = sc.nextLine();
                 System.out.println("-------------------------");
                 for(String x : prohibitedWords){
-                    if(newWord.contains(x)){
+                    if(newWord.contains(x)){    // If the new word is repeated, the new word wont be added.
                         System.out.println("This word is already included in this prohibited word: " + x);
                         System.out.println("*************************");
                         while(choice>1 || choice<0){
@@ -135,6 +175,7 @@ public class Admin {
         }
     }
 
+    // Method to display all the prohibited words as reference for admin.
     public void displayProhibitedWord(ArrayList<String> prohibitedWords){
         System.out.println("<" + prohibitedWords.size() + " prohibited words>");
         System.out.println("-------------------------");

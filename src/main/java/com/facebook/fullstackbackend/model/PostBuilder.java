@@ -1,6 +1,7 @@
 package com.facebook.fullstackbackend.model;
 
 public class PostBuilder {
+    // Total 7 attributes
     public String postID;
     public String userID;
     public Post.Status status;
@@ -34,6 +35,7 @@ public class PostBuilder {
         this.comments = 0;
     }
 
+    // Getter and setter method 
     public void setPostID(String postID){
         this.postID = postID;
     }
@@ -48,9 +50,11 @@ public class PostBuilder {
         return userID;
     }
 
+    // Setter method used to create new post.
     public void setStatus(Post.Status status){
         this.status = status;
     }
+    // Setter method used to create Post object.
     public void setStatus(String status){
         this.status = Post.Status.valueOf(status);
     }

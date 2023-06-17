@@ -1,10 +1,12 @@
 package com.facebook.fullstackbackend.model;
 
+import java.util.InputMismatchException;
 import java.util.NoSuchElementException;
 import java.util.Scanner;
 
 import com.facebook.fullstackbackend.repository.DatabaseSql;
 
+// Only some methods from the LinkedList class will be used
 public class LinkedList<E>{
     Scanner sc = new Scanner(System.in);
     PostManagement postManager = new PostManagement();
@@ -18,6 +20,7 @@ public class LinkedList<E>{
         size=0;
     }
 
+    // Method used to add post into history after viewing.
     public void addFirst(String e){
         Node<String> temp = new Node<>(e, head, null);
         if(head!=null)
@@ -26,7 +29,6 @@ public class LinkedList<E>{
         if(tail==null)
             tail = temp;
         size++;
-        //System.out.println("adding: " + e);
     }
 
     public void addLast(String e){
@@ -37,7 +39,6 @@ public class LinkedList<E>{
         if(head==null)
             head = temp;
         size++;
-        //System.out.println("adding: " + e);
     }
 
     public void add(String e, int index){
@@ -55,7 +56,6 @@ public class LinkedList<E>{
             current.prev.next = insert;
             current.prev = insert;
             size++;
-            //System.out.println("adding: " + e);
         }
     }
 
@@ -66,7 +66,6 @@ public class LinkedList<E>{
         if(head!=null)
             head.prev = null;
         size--;
-        //System.out.println("deleted: " + temp.element);
     }
 
     public void removeLast(){
@@ -76,7 +75,6 @@ public class LinkedList<E>{
         if(tail!=null)
             tail.next = null;
         size--;
-        //System.out.println("deleted: " + temp.element);
     }
 
     public void remove(int index){
@@ -96,10 +94,10 @@ public class LinkedList<E>{
             temp.next = null;
             temp.prev = null;
             size--;
-            //System.out.println("deleted: " + temp.element);
         }
     }
 
+    // Method used to remove post from the history.
     public LinkedList<String> remove(String post, LinkedList<String> history){
         if(!history.contains(post))
             throw new NoSuchElementException();
@@ -120,11 +118,11 @@ public class LinkedList<E>{
             temp.next = null;
             temp.prev = null;
             history.size--;
-            //System.out.println("deleted: " + temp.element);
         }
         return history;
     }
 
+    // Method to check if the history contains a specific post.
     public boolean contains(String e){
         if(size==0)
             return false;
@@ -141,48 +139,69 @@ public class LinkedList<E>{
         return false;
     }
 
+    // Method to display the user's history by iterating it.
     public LinkedList<String> iterateForward(User user, LinkedList<String> history, ConnectionGraph<String> graph){
-        //System.out.println("iterating forward..");
-        Node<String> current = history.head;
-        int choice = 1;
-        while(current!=null && choice>=0){
-            Post post = database.getPost(current.element);
-            User u1 = database.getProfile(post.getUserID());
-            postManager.viewPost(post);
-            if(!current.element.equals(history.tail.element))
-                System.out.println("0 - Next");
-            System.out.println("1 - View post");
-            if(current!=history.head)
-                System.out.println("2 - Back");
-            System.out.println("-1 - Back to home page");
-            System.out.println("*************************");
-            choice = sc.nextInt();
-            System.out.println("*************************");
-            switch(choice){
-                case 0: if(!current.element.equals(history.tail.element))
-                            current = current.next;
-                        break;
-                case 1: Node<String> temp = current.prev;
-                        if(post.getStatus().equals(Post.Status.PRIVATE)){
-                            if(database.privacy(user, u1, graph))
-                                postManager.displayPostAction(user, post, history);
-                            else{
-                                System.out.println("This post is private.");
-                                System.out.println("-------------------------");
-                            }
-                        }else
-                            postManager.displayPostAction(user, post, history);
+        try{
+            Node<String> current = history.head;
+            int choice = 1;
+            while(current!=null && choice>=0){
+                Post post = database.getPost(current.element);
+                User u1 = database.getProfile(post.getUserID());
+                if(u1 == null){
+                    history = remove(post.getPostID(), history);
+                    current = current.next;
+                }
+                postManager.viewPost(post);
 
-                        // If the history post has been deleted, return to the previous history post
-                        if(!database.verifyPostExist(post)){
-                            current = temp;
-                        }
-                        break;
-                case 2: if(current!=head)
-                            current = current.prev;
-                        break;
+                if(!current.element.equals(history.tail.element))
+                    System.out.println("0 - Next");
+                System.out.println("1 - View post");
+                if(!current.element.equals(history.head.element))
+                    System.out.println("2 - Back");
+                System.out.println("-1 - Back to Home page");
+                System.out.println("*************************");
+                choice = sc.nextInt();
+                System.out.println("*************************");
+                switch(choice){
+                    case 0: if(!current.element.equals(history.tail.element))
+                                current = current.next;
+                            break;
+                    case 1: Node<String> temp = current.prev;
+                            // Condition that if the user has already viewed a friend's private post before removing the friend
+                            // After the user has removed the friend, when the user look back his history, he wont be able to react the removed friend's private post (because they are not friends already)
+                            // The user can view the post in history, but not able to like or comment
+                            if(post.getStatus().equals(Post.Status.PRIVATE)){
+                                if(database.privacy(user, u1, graph))
+                                    postManager.displayPostAction(user, post, history);
+                                else{
+                                    System.out.println("This post is private.");
+                                    System.out.println("-------------------------");
+                                }
+                            }else
+                                postManager.displayPostAction(user, post, history);
+
+                        
+                            if(!database.verifyPostExist(post)){
+                                if(temp!=null)
+                                    current = temp;     // If the history post has been deleted, return to the previous history post
+                                else
+                                    current = current.next;     // If there is no previous history, return to the next history post
+                            }
+                            break;
+                    case 2: if(!current.element.equals(history.head.element))
+                                current = current.prev;
+                            break;
+                }
             }
+            return history;
+        }catch(InputMismatchException e){
+            System.out.println("*************************");
+            System.out.println("Invalid input");
+            System.out.println("*************************");
+            sc.nextLine();
+            iterateForward(user, history, graph);
         }
+        System.out.println("Failed to get history");
         return history;
     }
 

@@ -661,7 +661,7 @@ public class DatabaseSql<T> {
                 postBuilder.setPostTime(rs.getString("postTime"));
                 Post post = postBuilder.build();
                 if(rs.getString("status").equals("PRIVATE")){
-                    // Only yourself and your friends can view your private posts
+                    // Only yourself and your friends can view your private posts, admin cannot access user's private posts
                     if(privacy(user, u1, graph) || user.getUsername().equals(u1.getUsername()))
                         userPosts.add(post);
                 }else
@@ -1155,6 +1155,8 @@ public class DatabaseSql<T> {
     }
 
     public boolean privacy(User user, User u1, ConnectionGraph<String> graph){
+        if(user.getUsername().equals(u1.getUsername()))
+            return true;
         if(graph.hasEdge(graph, user.getUsername(), u1.getUsername()))
             return true;
         else 
@@ -1296,6 +1298,15 @@ public class DatabaseSql<T> {
                 e.printStackTrace();
             }
         }
+    }
+
+    public boolean verifyUserExist(String accountID){
+        User user = null;
+        user = getProfile(accountID);
+        if(user==null)
+            return false;
+        else    
+            return true;
     }
 
     public boolean confirmPassword(String p1, String p2){

@@ -1,9 +1,14 @@
 package com.facebook.fullstackbackend.model;
 
 import java.util.*;
+
+import com.facebook.fullstackbackend.repository.DatabaseSql;
+
 import java.sql.*;
 
+// This class is used to handle the connections of all users of Facebook.
 public class ConnectionGraph<T extends Comparable<String>> {
+    DatabaseSql<String> database = new DatabaseSql<>();
     String graphFile = "graphFile.csv";
     Vertex<String> head;
     int size;
@@ -13,6 +18,7 @@ public class ConnectionGraph<T extends Comparable<String>> {
         size = 0;
     }
 
+    // Method to read the connections of all users from SQL database and store it in ConnectionGraph object.
     public ConnectionGraph<String> getGraph(ConnectionGraph<String> graph) {
         Connection conn = null;
         PreparedStatement pstmt = null;
@@ -100,6 +106,7 @@ public class ConnectionGraph<T extends Comparable<String>> {
         return -1;
     }
 
+    // Method to check if the user exist in the graph.
     public boolean hasVertex(ConnectionGraph<String> graph, String v) {
         if (graph.head == null)
             return false;
@@ -112,6 +119,7 @@ public class ConnectionGraph<T extends Comparable<String>> {
         return false;
     }
 
+    // Method used when creating ConnectionGraph object.
     public boolean addVertex(ConnectionGraph<String> graph, String v){
         if(hasVertex(graph, v)==false){
             Vertex<String> temp = head;
@@ -132,11 +140,22 @@ public class ConnectionGraph<T extends Comparable<String>> {
             return false;
     }
 
+    // Method used when admin remove user.
     public ConnectionGraph<String> removeVertex(ConnectionGraph<String> graph, String v) {
+        User user = database.getProfile(v);
         // Remove all edges of the vertex from graph
         ArrayList<String> edges = graph.getNeighbours(graph, v);
         for(String x : edges){
+            User u1 = database.getProfile(x);
             graph = graph.removeUndirectedEdge(graph, v, x);
+
+            // Decrement number of friends
+            user.setNoOfFriends(user.getNoOfFriends()-1);
+            u1.setNoOfFriends(u1.getNoOfFriends()-1);
+            // Update no of friends
+            DatabaseSql<Integer> database = new DatabaseSql<>();
+            database.updateUserProfile(user, "noOfFriends", user.getNoOfFriends());
+            database.updateUserProfile(u1, "noOfFriends", u1.getNoOfFriends());
         }
 
         Vertex<String> temp = graph.head;
@@ -172,6 +191,7 @@ public class ConnectionGraph<T extends Comparable<String>> {
     }
 
 
+    // Method used when user register Facebook.
     public ConnectionGraph<String> registerVertex(ConnectionGraph<String> graph, String v) {
         boolean status = addVertex(graph, v);
         if (status) {
@@ -204,16 +224,7 @@ public class ConnectionGraph<T extends Comparable<String>> {
         return -1;
     }
 
-    public ArrayList<String> getAllVertexObjects(ConnectionGraph<String> graph) {
-        ArrayList<String> list = new ArrayList<>();
-        Vertex<String> temp = graph.head;
-        while (temp != null) {
-            list.add(temp.vertexInfo);
-            temp = temp.nextVertex;
-        }
-        return list;
-    }
-
+    // Method to get all users of Facebook.
     public ArrayList<String> getAllVertices(ConnectionGraph<String> graph) {
         ArrayList<String> list = new ArrayList<>();
         Vertex<String> temp = graph.head;
@@ -224,6 +235,7 @@ public class ConnectionGraph<T extends Comparable<String>> {
         return list;
     }
 
+    // Method to get a specific vertex.
     public String getVertex(ConnectionGraph<String> graph, String v) {
         if (graph.head == null)
             return null;
@@ -236,6 +248,7 @@ public class ConnectionGraph<T extends Comparable<String>> {
         return null;
     }
 
+    // Method used to create undirected edge.
     public ConnectionGraph<String> addEdge(ConnectionGraph<String> graph, String source, String destination) {
         if (graph.head == null) 
             return graph;
@@ -264,14 +277,20 @@ public class ConnectionGraph<T extends Comparable<String>> {
         System.out.println("Failed to add edge.");
         return graph;
     }
+
+    // Method used when user accepted friend request from a user.
     public ConnectionGraph<String> addUndirectedEdge(ConnectionGraph<String> graph, String v1, String v2) {
         ConnectionGraph<String> temp = graph.addEdge(graph, v1, v2);
+        // Update to database
         updateFriend(graph, v1, v2);
+
         temp = temp.addEdge(temp, v2, v1);
+        // Update to database
         updateFriend(graph, v2, v1);
         return temp;
     }
 
+    // Method to check whether if two users are friends.
     public boolean hasEdge(ConnectionGraph<String> graph, String source, String destination) {
         if (graph.head == null)
             return false;
@@ -294,6 +313,7 @@ public class ConnectionGraph<T extends Comparable<String>> {
         return false;
     }
 
+    // Method used to remove undirected edge.
     public ConnectionGraph<String> removeEdge(ConnectionGraph<String> graph, String source, String destination) {
         if (graph.head == null)
             return graph;
@@ -312,7 +332,6 @@ public class ConnectionGraph<T extends Comparable<String>> {
                             sourceVertex.firstEdge = currentEdge.nextEdge;
                         }else
                             tempEdge.nextEdge = currentEdge.nextEdge;
-                        removeFriend(graph, source, destination);
                         return graph;
                     }
                     tempEdge = currentEdge;
@@ -324,12 +343,20 @@ public class ConnectionGraph<T extends Comparable<String>> {
         System.out.println("Failed to remove edge.");
         return graph;
     }
+
+    // Method used when user removed a friend.
     public ConnectionGraph<String> removeUndirectedEdge(ConnectionGraph<String> graph, String v1, String v2) {
         ConnectionGraph<String> temp = graph.removeEdge(graph, v1, v2);
+        // Update to database
+        removeFriend(graph, v1, v2);
+
         temp = temp.removeEdge(temp, v2, v1);
+        // Update to database
+        removeFriend(graph, v2, v1);
         return temp;
     }
 
+    // Method to get user's friends.
     public ArrayList<String> getNeighbours(ConnectionGraph<String> graph, String v) {
         if (!hasVertex(graph, v))
             return null;
@@ -363,6 +390,7 @@ public class ConnectionGraph<T extends Comparable<String>> {
         }
     }    
 
+    // Method used to update a new undirected edge into database.
     public void updateFriend(ConnectionGraph<String> graph, String u1, String u2){
         ArrayList<String> friends = graph.getNeighbours(graph, u1);
         Connection conn = null;
@@ -395,6 +423,7 @@ public class ConnectionGraph<T extends Comparable<String>> {
         }
     }
 
+    // Method used to update a removed undirected edge into database.
     public void removeFriend(ConnectionGraph<String> graph, String u1, String u2){
         ArrayList<String> friends = graph.getNeighbours(graph, u1);
         Connection conn = null;
