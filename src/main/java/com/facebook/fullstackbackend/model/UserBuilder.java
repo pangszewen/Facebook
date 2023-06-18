@@ -9,8 +9,6 @@ import java.util.InputMismatchException;
 import java.util.Scanner;
 import java.util.Stack;
 
-import org.hibernate.internal.build.AllowSysOut;
-
 import com.facebook.fullstackbackend.repository.DatabaseSql;
 
 public class UserBuilder {

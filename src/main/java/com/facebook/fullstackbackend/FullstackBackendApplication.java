@@ -26,9 +26,10 @@ public class FullstackBackendApplication {
                                 System.out.println("\tFacebook");
                                 System.out.println("-------------------------");
                                 int choice = 0;
-                                while(choice!=1 && choice!=2){
+                                while(choice!=1 && choice!=2 && choice!=-1){
                                         System.out.println("1 - Register");
                                         System.out.println("2 - Login");
+                                        System.out.println("-1 - Terminate the whole program");
                                         System.out.println("*************************");
                                         choice = sc.nextInt();
                                         sc.nextLine();
@@ -39,6 +40,8 @@ public class FullstackBackendApplication {
                                                         user = manager.login();
                                                         break;
                                                 case 2: user = manager.login();
+                                                        break;
+                                                case -1: System.exit(0); // Terminate the program
                                                         break;
                                         }  
                                 }     
@@ -70,6 +73,12 @@ public class FullstackBackendApplication {
                                 }
                         }
                 }catch(InputMismatchException e){
+                        System.out.println("*************************");
+                        System.out.println("Invalid input");
+                        System.out.println("*************************");
+                        sc.nextLine();
+                        startFacebook();
+                }catch(Exception e){
                         System.out.println("*************************");
                         System.out.println("Invalid input");
                         System.out.println("*************************");

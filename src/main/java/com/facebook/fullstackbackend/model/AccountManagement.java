@@ -47,7 +47,7 @@ public class AccountManagement {
         builder.setEmail(email);
 
         // Input phone number
-        System.out.print("Phone number: ");
+        System.out.print("Phone number(format: XXX-XXXXXXX): ");
         String phoneNo = sc.nextLine();
         while(!database.verifyPhoneNo(phoneNo)){
             System.out.print("Phone number: ");
@@ -1363,9 +1363,11 @@ public class AccountManagement {
                     System.out.println("*************************");
                     switch(choiceInvite){
                         case 1 -> viewGroupPage(group);
-                        case 2 -> groupManager.joinGroup(group, user);
+                        case 2 -> group = groupManager.joinGroup(group, user);
                         case 3 -> groupManager.deleteInvitation(group.getGroupID(), user);
                     }
+                    if(groupManager.isMember(group, user))
+                        break;
                 }
             }
         }catch(InputMismatchException e){
