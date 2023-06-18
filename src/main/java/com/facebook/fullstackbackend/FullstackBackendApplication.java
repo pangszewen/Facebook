@@ -1,22 +1,15 @@
 package com.facebook.fullstackbackend;
 
-import org.springframework.boot.SpringApplication;
-import org.springframework.boot.autoconfigure.SpringBootApplication;
-
 import com.facebook.fullstackbackend.model.AccountManagement;
 import com.facebook.fullstackbackend.model.User;
 
-import java.time.LocalDate;
 import java.util.InputMismatchException;
 import java.util.Scanner;
 
-@SpringBootApplication
 public class FullstackBackendApplication {
 
         public static void main(String[] args) {
-	        SpringApplication.run(FullstackBackendApplication.class, args);
                 FullstackBackendApplication f  = new FullstackBackendApplication();
-                System.out.println(LocalDate.now());
                 f.startFacebook();
 		
         }

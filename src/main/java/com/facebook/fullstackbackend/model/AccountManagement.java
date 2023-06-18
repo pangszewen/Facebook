@@ -388,7 +388,7 @@ public class AccountManagement {
                             break;
 
                     case 3: int choiceFriend = 1;
-                            while(choiceFriend>0){
+                            while(choiceFriend!=0){
                                 System.out.println("<" + u1.getNoOfFriends() + " friends>");
                                 System.out.println("-------------------------");
                                 System.out.println("0 - Back");

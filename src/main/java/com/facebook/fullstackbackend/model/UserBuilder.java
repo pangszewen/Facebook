@@ -9,6 +9,8 @@ import java.util.InputMismatchException;
 import java.util.Scanner;
 import java.util.Stack;
 
+import org.hibernate.internal.build.AllowSysOut;
+
 import com.facebook.fullstackbackend.repository.DatabaseSql;
 
 public class UserBuilder {
@@ -181,6 +183,7 @@ public class UserBuilder {
     }
     // Setter method used for create user object.
     public void setJobs(Stack<String> jobs){
+        this.jobs = new Stack<>();
         this.jobs = jobs;
     }
     public Stack<String> getJobs(){
@@ -618,7 +621,8 @@ public class UserBuilder {
                     case 1: System.out.print("New job: ");
                             String currentJob = sc.nextLine();
                             System.out.println("*************************");
-                            while(choice!=0){
+                            choice = 2;
+                            while(choice!=0 && choice!=1){
                                 System.out.println("0 - Back");
                                 System.out.println("1 - Confirm changes");
                                 System.out.println("*************************");
@@ -634,6 +638,8 @@ public class UserBuilder {
                     case 2: while(choice!=0){
                                 System.out.println("Delete job: ");
                                 Stack<String> tempStack = new Stack<>();
+                                Stack<String> stack = new Stack<>();
+                                stack.addAll(jobStack);
                                 int count = 1;
                                 System.out.println("0 - Back");
                                 // Display all user's job by printing the latest job first.
@@ -644,17 +650,22 @@ public class UserBuilder {
                                 }
                                 System.out.println("*************************");
                                 choice = sc.nextInt();
+                                sc.nextLine();
                                 System.out.println("*************************");
+                                System.out.println(stack);
                                 //If input is in range, proceed to delete the selected job.
                                 if(choice>0 && choice<tempStack.size()+1){
+                                    jobStack = new Stack<>();
                                     count = tempStack.size();
                                     while(!tempStack.empty()){
-                                        if(count!=choice)
+                                        if(count!=choice){
                                             jobStack.push(tempStack.pop());
-                                        else
+                                        }else
                                             tempStack.pop();
                                         count--;
                                     }
+                                }else if(choice==0){
+                                    jobStack = stack;
                                 }
                             }
                             break;
@@ -663,7 +674,7 @@ public class UserBuilder {
                 user.setJobs(jobStack);
 
                 // Update to database
-                String jobs = String.join(",", jobStack);
+                String jobs = String.join(",", user.getJobs());
                 database.updateUserProfile(user, "jobs", jobs);
             }
             return user;

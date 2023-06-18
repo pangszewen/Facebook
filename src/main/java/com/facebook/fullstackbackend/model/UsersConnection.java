@@ -43,7 +43,7 @@ public class UsersConnection {
         System.out.println("Hobby: " + user.getHobbies().get(0));
         String currentJob = user.getJobs().pop();
         System.out.println("Current job: " + currentJob);
-        if(user.getJobs().size()>1){    // Display previous job if available.
+        if(user.getJobs().size()>=1){    // Display previous job if available.
             System.out.println("Previous job: " + user.getJobs().peek());
         }
         user.getJobs().push(currentJob);
@@ -149,21 +149,6 @@ public class UsersConnection {
         }
         return recomUser;
     }
-    
-    /*
-    // Method to display recommended users.
-    public User displayRecommendedUsers(User u1, ConnectionGraph<String> graph){
-        ArrayList<User> recomUser = recommendedUser(u1, graph);
-        for(int i=1; i<=recomUser.size(); i++){
-            System.out.print(i + " - " + recomUser.get(i-1).getName());
-            System.out.println(" (" + getTotalMutual(u1, recomUser.get(i-1), graph) + ")");
-        }
-        int choice = sc.nextInt();
-        if(choice>0)
-            return recomUser.get(choice-1);
-        return null;
-    }
-    */
 
     // Method to add friend by sending reqeust.
     public void sendRequest(User sender, User receiver){
