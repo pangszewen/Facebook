@@ -36,6 +36,7 @@ public class Admin {
     public ConnectionGraph<String> deleteAccount(User user, ConnectionGraph<String> graph){
         if(isAdmin(user)){
             System.out.println("***This user is an admin. Operation denied***");
+            System.out.println("*************************");
             return graph;
         }
         // Remove all user posts
@@ -84,6 +85,7 @@ public class Admin {
         // Banning admin users are not allowed
         if(isAdmin(user)){
             System.out.println("***This user is an admin. Operation denied***");
+            System.out.println("*************************");
             return;
         }
         int choice = 6;
@@ -114,6 +116,13 @@ public class Admin {
                 database.updateUserProfile(user, "banStartDate", user.getBanStartDate());
             }
         }
+    }
+
+    public void unbanUser(User user){
+        user.setBanDuration("P0Y0M0D");
+        user.setBanStartDate("");
+        database.updateUserProfile(user, "banDuration", user.getBanDuration());
+        database.updateUserProfile(user, "banStartDate", user.getBanStartDate());
     }
 
     // Content is manually removed by the admin

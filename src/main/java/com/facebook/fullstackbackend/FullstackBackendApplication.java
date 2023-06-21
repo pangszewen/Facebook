@@ -47,27 +47,35 @@ public class FullstackBackendApplication {
                                 }     
                                 if(user!=null){
                                         choice1 = 1;
-                                        while(choice1>0){
-                                                System.out.println("\tHome Page");
-                                                System.out.println("-------------------------");
-                                                System.out.println("0 - Log out");
-                                                System.out.println("1 - My Page");
-                                                System.out.println("2 - Search Facebook");
-                                                System.out.println("3 - Your friends");
-                                                System.out.println("4 - Messenger");
-                                                System.out.println("5 - Suggestions");
-                                                System.out.println("6 - History");
-                                                System.out.println("*************************");
-                                                choice1 = sc.nextInt();
-                                                sc.nextLine();
-                                                System.out.println("*************************");
-                                                switch(choice1){
-                                                        case 1 -> manager.viewMyPage();
-                                                        case 2 -> manager.searchUsers();
-                                                        case 3 -> manager.displayFriends();
-                                                        case 4 -> manager.messenger();
-                                                        case 5 -> manager.displayRecommendedUsers();
-                                                        case 6 -> manager.displayHistory();
+                                        while(choice1!=0){
+                                                try{
+                                                        System.out.println("\tHome Page");
+                                                        System.out.println("-------------------------");
+                                                        System.out.println("0 - Log out");
+                                                        System.out.println("1 - My Page");
+                                                        System.out.println("2 - Search Facebook");
+                                                        System.out.println("3 - Your friends");
+                                                        System.out.println("4 - Messenger");
+                                                        System.out.println("5 - Suggestions");
+                                                        System.out.println("6 - History");
+                                                        System.out.println("*************************");
+                                                        choice1 = sc.nextInt();
+                                                        sc.nextLine();
+                                                        System.out.println("*************************");
+                                                        switch(choice1){
+                                                                case 1 -> manager.viewMyPage();
+                                                                case 2 -> manager.searchUsers();
+                                                                case 3 -> manager.displayFriends();
+                                                                case 4 -> manager.messenger();
+                                                                case 5 -> manager.displayRecommendedUsers();
+                                                                case 6 -> manager.displayHistory();
+                                                        }
+                                                }catch(InputMismatchException e){
+                                                        System.out.println("*************************");
+                                                        System.out.println("Invalid input");
+                                                        System.out.println("*************************");
+                                                        sc.nextLine();
+                                                        continue;
                                                 }
                                         }
                                 }

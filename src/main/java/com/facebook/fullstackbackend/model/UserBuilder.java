@@ -301,6 +301,7 @@ public class UserBuilder {
                 // Update to database.
                 database.updateUserAccount(user, "password", newPassword);
             }
+            user = database.getProfile(user.getAccountID());
             return user;
         }catch(InputMismatchException e ){
             System.out.println("*************************");
@@ -444,6 +445,11 @@ public class UserBuilder {
             System.out.print("Change gender to (MALE/FEMALE): ");
             String gender = sc.nextLine();
             System.out.println("*************************");
+            while(!verifyGender(gender)){
+                System.out.print("Change gender to (MALE/FEMALE): ");
+                gender = sc.nextLine();
+                System.out.println("*************************");
+            }
 
             int choice = 2;
             while(choice!=0 && choice!=1){
@@ -536,7 +542,8 @@ public class UserBuilder {
                             user.getHobbies().add(hobby);
                             break;
 
-                    case 2: while(choice!=0){
+                    case 2: choice = -1;
+                            while(choice<0 || choice>user.getHobbies().size()){
                                 System.out.println("Select hobby: ");
                                 System.out.println("0 - Back");
                                 for(int i=0; i<user.getHobbies().size(); i++){
@@ -577,6 +584,7 @@ public class UserBuilder {
                 }
                 // Update to database.
                 String hobbies = String.join(",", user.getHobbies());
+                //user.setHobbies(hobbies);
                 database.updateUserProfile(user, "hobbies", hobbies);
             }
             return user;
@@ -650,7 +658,6 @@ public class UserBuilder {
                                 choice = sc.nextInt();
                                 sc.nextLine();
                                 System.out.println("*************************");
-                                System.out.println(stack);
                                 //If input is in range, proceed to delete the selected job.
                                 if(choice>0 && choice<tempStack.size()+1){
                                     jobStack = new Stack<>();
@@ -723,9 +730,9 @@ public class UserBuilder {
                 endDate = startDate.plusDays(7);
             }
             System.out.println();
-            System.out.println("You are banned by admin for " + banDuration + " since " + user.getBanStartDate());
+            System.out.println("This user is banned by admin for " + banDuration + " since " + user.getBanStartDate());
             System.out.println("Remaining banned time: " + getRemainingBannedTime(user, endDate));
-            System.out.println("You can start using Facebook again on " + endDate);
+            System.out.println("This user can start using Facebook again on " + endDate);
             System.out.println();
             return true;
         }

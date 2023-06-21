@@ -17,6 +17,7 @@ import java.util.regex.*;
 public class DatabaseSql<T> {
     Random rand = new Random();
 
+    // Method to insert new user into database.
     public void registerUser(User user){
         Connection conn = null;
         PreparedStatement pstmt = null;
@@ -50,7 +51,7 @@ public class DatabaseSql<T> {
         }
     }
 
-    // Check if login successfully
+    // Check if login successfully.
     public boolean isLogin(String emailOrPhoneNo, String password) {
         Connection conn = null;
         PreparedStatement pstmt = null;
@@ -84,7 +85,7 @@ public class DatabaseSql<T> {
         return false;
     }
 
-    // Check whether user has setup profile 
+    // Check whether user has setup profile.
     public boolean isSetup(String emailOrPhoneNoOrUsername){
         Connection conn = null;
         PreparedStatement pstmt = null;
@@ -109,6 +110,7 @@ public class DatabaseSql<T> {
         return false;
     }
 
+    // Method to insert user's profile details into database.
     public void setupProfile(User user) {
         Connection conn = null;
         PreparedStatement pstmt = null;
@@ -162,6 +164,7 @@ public class DatabaseSql<T> {
         }
     }
     
+    // Method to delete user from database.
     public void deleteAccount(User user) {
         Connection conn = null;
         PreparedStatement pstmtUserAccount = null;
@@ -199,6 +202,7 @@ public class DatabaseSql<T> {
         }
     }
     
+    // Method to update user's account info. (only for changes on role and password)
     public void updateUserAccount(User user, String fieldName, String newValue) {
         Connection conn = null;
         PreparedStatement pstmt = null;
@@ -233,6 +237,7 @@ public class DatabaseSql<T> {
         }
     }
     
+    // Method to update user's profile details.
     public void updateUserProfile(User user, String fieldName, T newValue) {
         Connection conn = null;
         PreparedStatement pstmt = null;
@@ -265,6 +270,7 @@ public class DatabaseSql<T> {
         }
     }
 
+    // Method to get User object if user havent setup profile.
     public User getAccount(String accountIDOrEmailOrPhoneNoOrUsername) {
         Connection conn = null;
         PreparedStatement pstmt = null;
@@ -301,6 +307,7 @@ public class DatabaseSql<T> {
         return null;
     }
 
+    // Method to get user object with full information.
     public User getProfile(String accountIDOrEmailOrPhoneNoOrUsername){
         Connection conn = null;
         PreparedStatement pstmt = null;
@@ -389,7 +396,7 @@ public class DatabaseSql<T> {
         return null;
     }
 
-    // Find users with search keyword
+    // Method to find users with search keyword.
     public ArrayList<User> ifContains(String emailOrPhoneNoOrUsernameOrName) {
         Connection conn = null;
         PreparedStatement pstmt = null;
@@ -418,22 +425,35 @@ public class DatabaseSql<T> {
         } catch (SQLException e) {
             e.printStackTrace();
         }
+
+        int count = 0;
+        for(int i = 0; i<contains.size(); i++){
+            String username = contains.get(i).getUsername();
+            String email = contains.get(i).getEmail();
+            String phoneNo = contains.get(i).getPhoneNo();
+            if(username.equals(emailOrPhoneNoOrUsernameOrName) || email.equals(emailOrPhoneNoOrUsernameOrName) || phoneNo.equals(emailOrPhoneNoOrUsernameOrName)){
+                User temp = contains.get(count);
+                contains.set(count, contains.get(i));
+                contains.set(i, temp);
+                tempContains.add(contains.get(count));
+                count++;
+            }
+        }
     
         for (int i = 0; i < emailOrPhoneNoOrUsernameOrName.length(); i++) {
-            for (int j = 0; j < contains.size(); j++) {
+            for (int j = count; j < contains.size(); j++) {
                 String name = contains.get(j).getName().toLowerCase();
                 if (name.charAt(i) == emailOrPhoneNoOrUsernameOrName.charAt(i)) {
                     tempContains.add(contains.get(j));
+                    contains.remove(j);
                 }
             }
-            contains = new ArrayList<>(tempContains);
-            tempContains.clear();
         }
     
-        return contains;
+        return tempContains;
     }
 
-    // Find users with search keyword
+    // Method to find groups with search keyword.
     public ArrayList<Group> ifContainsGroup(String groupIDorGroupName) {
         Connection conn = null;
         PreparedStatement pstmt = null;
@@ -444,7 +464,7 @@ public class DatabaseSql<T> {
             // Establish connection
             conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/database", "root", "");
     
-            // Read from userprofile table
+            // Read from groups table
             pstmt = conn.prepareStatement("SELECT * FROM groups WHERE groupID = ? OR groupName LIKE ?");
             pstmt.setString(1, groupIDorGroupName);
             pstmt.setString(2, "%" + groupIDorGroupName + "%");
@@ -461,6 +481,7 @@ public class DatabaseSql<T> {
             e.printStackTrace();
         }
     
+
         for (int i = 0; i < groupIDorGroupName.length(); i++) {
             for (int j = 0; j < contains.size(); j++) {
                 String name = contains.get(j).getGroupName().toLowerCase();
@@ -475,72 +496,7 @@ public class DatabaseSql<T> {
         return contains;
     }
 
-    // Get friend request list
-    public ArrayList<User> getRequestList(User user) {
-        ArrayList<User> requestList = new ArrayList<>();
-        Connection conn = null;
-        PreparedStatement pstmt = null;
-        try {
-            // Establish connection
-            conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/database", "root", "");
-
-            // Read from userprofile table
-            pstmt = conn.prepareStatement("SELECT * FROM userprofile WHERE username = ?");
-            pstmt.setString(1, user.getUsername());
-            ResultSet rs = pstmt.executeQuery();
-            
-            if (rs.next()) {
-                String requestListString = rs.getString("requestList");
-                String[] usernameRequestList = requestListString.split(",");
-                if (!requestListString.equals("")) {
-                    for (String x : usernameRequestList) {
-                        User requestedUser = getProfile(x);
-                        if (requestedUser != null) {
-                            requestList.add(requestedUser);
-                        }
-                    }
-                }
-            }
-            
-            rs.close();
-            conn.close();
-            return requestList;
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-        
-        System.out.println("Failed to get friend request list.");
-        return null;
-    }
-
-    // Update friend request list
-    public void updateRequestList(User user, ArrayList<User> list) {
-        Connection conn = null;
-        PreparedStatement pstmt = null;
-        String accountID = user.getAccountID();
-        
-        // Store the request list in terms of usernames
-        ArrayList<String> usernameList = new ArrayList<>();
-        for (User requestedUser : list) {
-            usernameList.add(requestedUser.getUsername());
-        }
-        
-        try {
-            // Establish connection
-            conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/database", "root", "");
-
-            // Update userprofile table
-            pstmt = conn.prepareStatement("UPDATE userprofile SET requestList = ? WHERE accountID = ?");
-            pstmt.setString(1, String.join(",", usernameList));
-            pstmt.setString(2, accountID);
-            pstmt.executeUpdate();
-            
-            conn.close();
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-    }
-
+    // Method to insert new post into database.
     public void uploadPost(Post post){
         Connection conn = null;
         PreparedStatement pstmt = null;
@@ -575,6 +531,7 @@ public class DatabaseSql<T> {
         }
     }
 
+    // Method to delete post from database.
     public void deletePost(Post post){
         Connection conn = null;
         PreparedStatement pstmt = null;
@@ -603,6 +560,7 @@ public class DatabaseSql<T> {
         }
     }
 
+    // Method to get Post object.
     public Post getPost(String postID){
         Connection conn = null;
         PreparedStatement pstmt = null;
@@ -610,7 +568,7 @@ public class DatabaseSql<T> {
             // Establish connection
             conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/database", "root", "");
 
-            // Read from useraccount table
+            // Read from post table
             pstmt = conn.prepareStatement("SELECT * FROM post WHERE postID = ?");
             pstmt.setString(1, postID);
             ResultSet rs = pstmt.executeQuery();
@@ -637,6 +595,7 @@ public class DatabaseSql<T> {
         return null;
     }
 
+    // Method to get all posts of user.
     public ArrayList<Post> getUserPosts(User user, User u1, ConnectionGraph<String> graph){
         ArrayList<Post> userPosts = new ArrayList<>();
         Connection conn = null;
@@ -645,7 +604,7 @@ public class DatabaseSql<T> {
             // Establish connection
             conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/database", "root", "");
 
-            // Read from useraccount table
+            // Read from post table
             pstmt = conn.prepareStatement("SELECT * FROM post WHERE userID = ?");
             pstmt.setString(1, u1.getAccountID());
             ResultSet rs = pstmt.executeQuery();
@@ -667,7 +626,7 @@ public class DatabaseSql<T> {
                 }else
                     userPosts.add(post);     // Public posts
             }
-            Collections.reverse(userPosts);
+            Collections.reverse(userPosts);     // Arrange newest post to be first
             return userPosts;
 
         } catch (SQLException e) {
@@ -679,6 +638,7 @@ public class DatabaseSql<T> {
         return null;
     }
 
+    // Method to get all posts of group.
     public ArrayList<Post> getGroupPosts(Group group){
         ArrayList<Post> groupPosts = new ArrayList<>();
         Connection conn = null;
@@ -687,7 +647,7 @@ public class DatabaseSql<T> {
             // Establish connection
             conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/database", "root", "");
 
-            // Read from useraccount table
+            // Read from post table
             for(int i=0; i<group.getNoOfCreatedPost(); i++){
                 pstmt = conn.prepareStatement("SELECT * FROM post WHERE postID = ?");
                 pstmt.setString(1, group.getGroupID()+"G"+i);
@@ -706,7 +666,7 @@ public class DatabaseSql<T> {
                     groupPosts.add(post);
                 }
             }
-            Collections.reverse(groupPosts);
+            Collections.reverse(groupPosts);    // Arrange newest post to be first
             return groupPosts;
 
         } catch (SQLException e) {
@@ -718,6 +678,7 @@ public class DatabaseSql<T> {
         return null;
     }
 
+    // Method to update post details into database.
     public void updatePost(Post post, String fieldName, T newValue) {
         Connection conn = null;
         PreparedStatement pstmt = null;
@@ -725,7 +686,7 @@ public class DatabaseSql<T> {
             // Establish connection
             conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/database", "root", "");
     
-            // Update userprofile table
+            // Update post table
             pstmt = conn.prepareStatement("UPDATE post SET " + fieldName + "=? WHERE postID=?");
             if (newValue instanceof String) 
                 pstmt.setString(1, (String) newValue); // Set as String
@@ -750,6 +711,7 @@ public class DatabaseSql<T> {
         }
     }
 
+    // Method to get post's list of likes and comments.
     public ArrayList<String> getPostList(Post post, String fieldname){
         ArrayList<String> list = new ArrayList<>();
         Connection conn = null;
@@ -758,7 +720,7 @@ public class DatabaseSql<T> {
             // Establish connection
             conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/database", "root", "");
 
-            // Read from userprofile table
+            // Read from post table
             pstmt = conn.prepareStatement("SELECT * FROM post WHERE postID = ?");
             pstmt.setString(1, post.getPostID());
             ResultSet rs = pstmt.executeQuery();
@@ -784,6 +746,7 @@ public class DatabaseSql<T> {
         return null;
     }
 
+    // Method to update post's list of likes and comments.
     public void updatePostList(Post post, String fieldName, ArrayList<String> list) {
         Connection conn = null;
         PreparedStatement pstmt = null;
@@ -793,7 +756,7 @@ public class DatabaseSql<T> {
             // Establish connection
             conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/database", "root", "");
 
-            // Update userprofile table
+            // Update post table
             pstmt = conn.prepareStatement("UPDATE post SET " + fieldName + "=? WHERE postID=?");
             pstmt.setString(1, String.join(",", list));
             pstmt.setString(2, postID);
@@ -805,6 +768,7 @@ public class DatabaseSql<T> {
         }
     }
 
+    // Method to insert new group into database.
     public void createGroup(Group group){
         Connection conn = null;
         PreparedStatement pstmt = null;
@@ -812,7 +776,7 @@ public class DatabaseSql<T> {
             // Establish connection
             conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/database", "root", "");
 
-            // Insert data into post table
+            // Insert data into groups table
             pstmt = conn.prepareStatement("INSERT INTO groups (groupID, groupName, adminID, members, noOfMembers, noOfCreatedPost, noOfDeletedPost, dateOfCreation) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
             pstmt.setString(1, group.getGroupID());
             pstmt.setString(2, group.getGroupName());
@@ -840,6 +804,7 @@ public class DatabaseSql<T> {
         }
     }
 
+    // Method to update group details into database.
     public void updateGroup(Group group, String fieldName, T newValue){
         Connection conn = null;
         PreparedStatement pstmt = null;
@@ -849,7 +814,7 @@ public class DatabaseSql<T> {
             // Establish connection
             conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/database", "root", "");
 
-            // Update userprofile table
+            // Update groups table
             pstmt = conn.prepareStatement("UPDATE groups SET " + fieldName + "=? WHERE groupID=?");
             if (newValue instanceof String) 
                 pstmt.setString(1, (String) newValue); // Set as String
@@ -865,6 +830,7 @@ public class DatabaseSql<T> {
         }
     }
 
+    // Method to delete group from database.
     public void deleteGroup(Group group){
         Connection conn = null;
         PreparedStatement pstmt = null;
@@ -872,7 +838,7 @@ public class DatabaseSql<T> {
             // Establish connection
             conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/database", "root", "");
     
-            // Delete group from userprofile table
+            // Delete group from user's group list and update userproflie table
             ArrayList<String> members = group.getMembers();
             for(int i=0; i<members.size(); i++){
                 User member = getProfile(members.get(i));
@@ -886,7 +852,7 @@ public class DatabaseSql<T> {
             }
             pstmt.close();
 
-            // Delete from group table
+            // Delete from groups table
             pstmt = conn.prepareStatement("DELETE FROM groups WHERE groupID = ?");
             pstmt.setString(1, group.getGroupID());
             pstmt.executeUpdate();
@@ -907,6 +873,7 @@ public class DatabaseSql<T> {
         }
     }
 
+    // Method to get Group object from database.
     public Group getGroup(String groupID){
         Connection conn = null;
         PreparedStatement pstmt = null;
@@ -914,7 +881,7 @@ public class DatabaseSql<T> {
             // Establish connection
             conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/database", "root", "");
 
-            // Read from useraccount table
+            // Read from groups table
             pstmt = conn.prepareStatement("SELECT * FROM groups WHERE groupID = ?");
             pstmt.setString(1, groupID);
             ResultSet rs = pstmt.executeQuery();
@@ -949,6 +916,7 @@ public class DatabaseSql<T> {
         return null;
     }
 
+    // Method to get all the groups joined by user.
     public ArrayList<Group> getUserGroup(User u1){
         ArrayList<Group> userGroups = new ArrayList<>();
         Connection conn = null;
@@ -957,7 +925,7 @@ public class DatabaseSql<T> {
             // Establish connection
             conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/database", "root", "");
 
-            // Read from useraccount table
+            // Read from userprofile table
             pstmt = conn.prepareStatement("SELECT * FROM userprofile WHERE accountID = ?");
             pstmt.setString(1, u1.getAccountID());
             ResultSet rs = pstmt.executeQuery();
@@ -980,6 +948,7 @@ public class DatabaseSql<T> {
         return null;
     }
 
+    // Method to encrypt password before storing into database.
     public String hashPassword(String password) {
         try {
             //Create MessageDigest instance for SHA-256 hashing
@@ -1001,6 +970,7 @@ public class DatabaseSql<T> {
         return null;
     }
 
+    // Validation of username
     public boolean verifyUsername(String username){
         // Check length of username
         if(username.length()<5 || username.length()>20){
@@ -1046,6 +1016,7 @@ public class DatabaseSql<T> {
         return true;
     }
 
+    // Validation of email
     public boolean verifyEmail(String email){
         // Email regex pattern
         String emailRegex = "^[a-zA-Z0-9.!#$%&’*+/=?^_`{|}\\-~]+@[a-zA-Z0-9\\-]+(?:\\.[a-zA-Z0-9\\-]+)*$";
@@ -1085,6 +1056,7 @@ public class DatabaseSql<T> {
         return true;
     }
 
+    // Validation of phone number
     public boolean verifyPhoneNo(String phoneNo){
         // Check length of phone number
         if(phoneNo.length()<7 || phoneNo.length()>14){
@@ -1130,6 +1102,7 @@ public class DatabaseSql<T> {
         return true;
     }
 
+    // Method to create non duplicated ID.
     public String generateID(String tableName, String fieldName) {
         int temp = rand.nextInt(100000);
         try {
@@ -1154,6 +1127,14 @@ public class DatabaseSql<T> {
         return String.valueOf(temp);
     }
 
+    public boolean verifyBanStatus(User user){
+        if(user.getBanDuration().equals("P0Y0M0D"))
+            return false;
+        else 
+            return true;
+    }
+
+    // Method to verify if user can view the post or not.
     public boolean privacy(User user, User u1, ConnectionGraph<String> graph){
         if(user.getUsername().equals(u1.getUsername()))
             return true;
@@ -1163,6 +1144,7 @@ public class DatabaseSql<T> {
             return false;
     }
 
+    // Method to verify if post exist in database.
     public boolean verifyPostExist(Post post){
         Connection conn = null;
         PreparedStatement pstmt = null;
@@ -1170,7 +1152,7 @@ public class DatabaseSql<T> {
             // Establish connection
             conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/database", "root", "");
 
-            // Read from userprofile table
+            // Read from post table
             pstmt = conn.prepareStatement("SELECT * FROM post WHERE postID = ?");
             pstmt.setString(1, post.getPostID());
             ResultSet rs = pstmt.executeQuery();
@@ -1185,6 +1167,7 @@ public class DatabaseSql<T> {
         return false;
     }
 
+    // Method to verify if group exist in database.
     public boolean verifyGroupExists(String groupID){
         Connection conn = null;
         PreparedStatement pstmt = null;
@@ -1192,7 +1175,7 @@ public class DatabaseSql<T> {
             // Establish connection
             conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/database", "root", "");
 
-            // Read from userprofile table
+            // Read from groups table
             pstmt = conn.prepareStatement("SELECT * FROM groups WHERE groupID = ?");
             pstmt.setString(1, groupID);
             ResultSet rs = pstmt.executeQuery();
@@ -1207,7 +1190,7 @@ public class DatabaseSql<T> {
         return false;
     }
 
-    //Prohibited words list
+    // Method to check whether if content contains prohibited words.
     public boolean containsOffensiveLanguage(String content) {
         Connection conn = null;
         PreparedStatement pstmt = null;
@@ -1240,6 +1223,7 @@ public class DatabaseSql<T> {
         return false;
     }
 
+    // Method to get list of prohibited words.
     public ArrayList<String> getProhibitedWords(){
         Connection conn = null;
         PreparedStatement pstmt = null;
@@ -1273,8 +1257,7 @@ public class DatabaseSql<T> {
         return prohibitedWords;
     }
 
-
-
+    // Method to insert new prohibited words into database.
     public void addNewProhibitedWord(String newProhibitedWord) {
         Connection conn = null;
         PreparedStatement pstmt = null;
@@ -1300,6 +1283,7 @@ public class DatabaseSql<T> {
         }
     }
 
+    // Method to verify if user exist in database.
     public boolean verifyUserExist(String accountID){
         User user = null;
         user = getProfile(accountID);
@@ -1309,6 +1293,7 @@ public class DatabaseSql<T> {
             return true;
     }
 
+    // Method to check if the passwords match.
     public boolean confirmPassword(String p1, String p2){
         if(p1.equals(p2))
             return true;

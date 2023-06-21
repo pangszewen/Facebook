@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.InputMismatchException;
 import java.util.Scanner;
+import java.util.Stack;
 
 import com.facebook.fullstackbackend.repository.DatabaseSql;
 
@@ -152,16 +153,16 @@ public class UsersConnection {
 
     // Method to add friend by sending reqeust.
     public void sendRequest(User sender, User receiver){
-        ArrayList<User> requestList = database.getRequestList(receiver);
-        requestList.add(sender);
-        database.updateRequestList(receiver, requestList);
+        Stack<String> requestList = receiver.getRequestList();
+        requestList.add(sender.getUsername());
+        database.updateUserProfile(receiver, "requestList", String.join(",", requestList));
     }
 
     // Method to check the existence of friend request from a user to a user.
     public boolean checkRequest(User sender, User receiver){
-        ArrayList<User> requestList = database.getRequestList(receiver);
-        for(User x : requestList){
-            if(x.getUsername().compareTo(sender.getUsername())==0)
+        Stack<String> requestList = receiver.getRequestList();
+        for(String x : requestList){
+            if(x.compareTo(sender.getUsername())==0)
                 return true;
         }
         return false;
@@ -169,17 +170,9 @@ public class UsersConnection {
 
     // Method to cancel friend request from a user to a user.
     public void cancelRequest(User sender, User receiver){
-        ArrayList<User> requestList = database.getRequestList(receiver);
-        ArrayList<String> username = new ArrayList<>();
-        for(User x : requestList){
-            username.add(x.getUsername());
-        }
-        username.remove(sender.getUsername());
-        requestList.clear();
-        for(String x : username){
-            requestList.add(database.getProfile(x));
-        }
-        database.updateRequestList(receiver, requestList);
+        Stack<String> requestList = receiver.getRequestList();
+        requestList.remove(sender.getUsername());
+        database.updateUserProfile(receiver, "requestList", String.join(",", requestList));
     }
 
     // Method to confirm friend request.
@@ -270,7 +263,18 @@ public class UsersConnection {
         try{
             int choice = 1;
             while(choice!=0){
-                ArrayList<User> requestList = database.getRequestList(user);
+                Stack<String> requestList = user.getRequestList();
+                Stack<String> temp = new Stack<>();
+                temp.addAll(requestList);
+                while(!temp.isEmpty()){
+                    if (!database.verifyUserExist(temp.peek())) {
+                        requestList.remove(temp.peek());
+                        database.updateUserProfile(user, "requestList", String.join(",", requestList));
+                        temp.pop();
+                    }else
+                        temp.pop();
+                }
+
                 System.out.println("<" + requestList.size() + " friend requests>");
                 System.out.println("-------------------------");
 
@@ -283,8 +287,9 @@ public class UsersConnection {
                 }
 
                 for(int i=0; i<requestList.size(); i++){
-                    System.out.println(requestList.get(i).getName());
-                    System.out.println("(" + getTotalMutual(user, requestList.get(i), graph) + " mutuals)");
+                    User u1 = database.getProfile(requestList.get(i));
+                    System.out.println(u1.getName());
+                    System.out.println("(" + getTotalMutual(user, u1, graph) + " mutuals)");
                     System.out.println("-------------------------");
                     if(i!=requestList.size()-1)
                         System.out.println("0 - Next");
@@ -306,9 +311,9 @@ public class UsersConnection {
                                 else 
                                     i--;
                                 break;
-                        case 1: graph = confirmRequest(requestList.get(i), user, graph);
+                        case 1: graph = confirmRequest(u1, user, graph);
                                 break;
-                        case 2: cancelRequest(requestList.get(i), user);
+                        case 2: cancelRequest(u1, user);
                                 break;
                     }
                 }
