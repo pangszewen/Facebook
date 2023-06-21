@@ -766,7 +766,7 @@ public class AccountManagement {
                         choice = result.size()+1;
                 }
 
-                while(choice>0 && choice<result.size()+1){
+                while(choice<0 || choice>0 && choice<result.size()+1){
                     // Display all search result
                     System.out.println("0 - Back");
                     System.out.println("-------------------------");
@@ -892,7 +892,7 @@ public class AccountManagement {
                         choice = result.size()+1;
                 }
 
-                while(choice>0 && choice<result.size()+1){
+                while(choice<0 || choice>0 && choice<result.size()+1){
                     // Display all search result
                     System.out.println("0 - Back");
                     int count = 1;
@@ -993,12 +993,11 @@ public class AccountManagement {
 
                 if(result.size()==0){
                     choice = 2;
-                    while(choice>1){
+                    while(choice!=0 && choice!=1){
                         System.out.println("No result found.");
                         System.out.println("-------------------------");
                         System.out.println("0 - Back");
                         System.out.println("1 - Search again");
-                        System.out.println("-1 - Back to Groups tab");
                         System.out.println("*************************");
                         choice = sc.nextInt();
                         sc.nextLine();
@@ -1008,7 +1007,7 @@ public class AccountManagement {
                         choice = result.size()+1;
                 }
 
-                while(choice>0 && choice<result.size()+1){
+                while(choice<0 || choice>0 && choice<result.size()+1){
                     // Display all search result
                     System.out.println("0 - Back");
                     int count = 1;
@@ -1024,7 +1023,6 @@ public class AccountManagement {
             
                     System.out.println("-------------------------");
                     System.out.println(result.size()+1 + " - Search again");
-                    System.out.println("-1 - Back to Groups tab");
                     System.out.println("*************************");
                     // Select to view searched account
                     choice = sc.nextInt();
@@ -1057,12 +1055,11 @@ public class AccountManagement {
 
                     if(result.size()==0){
                         choice = 2;
-                        while(choice>1){
+                        while(choice!=0 && choice!=1){
                             System.out.println("No result found.");
                             System.out.println("-------------------------");
                             System.out.println("0 - Back");
                             System.out.println("1 - Search again");
-                            System.out.println("-1 - Back to Groups tab");
                             System.out.println("*************************");
                             choice = sc.nextInt();
                             sc.nextLine();

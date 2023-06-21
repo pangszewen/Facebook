@@ -288,6 +288,7 @@ public class UsersConnection {
 
                 for(int i=0; i<requestList.size(); i++){
                     User u1 = database.getProfile(requestList.get(i));
+                    System.out.println(requestList.get(i));
                     System.out.println(u1.getName());
                     System.out.println("(" + getTotalMutual(user, u1, graph) + " mutuals)");
                     System.out.println("-------------------------");

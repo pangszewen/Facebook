@@ -356,7 +356,7 @@ public class DatabaseSql<T> {
 
                 String requestListStr = rs.getString("requestList");
                 List<String> reqeustList = new ArrayList<>();
-                if (requestListStr != null) {
+                if (requestListStr != "") {
                     reqeustList = Arrays.asList(requestListStr.split(","));
                 }
                 Stack<String> requestListStack = new Stack<>();
