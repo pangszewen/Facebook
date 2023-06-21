@@ -727,9 +727,9 @@ public class DatabaseSql<T> {
             
             if (rs.next()) {
                 String listString = rs.getString(fieldname);
-                String[] usernameList = listString.split(",");
+                String[] postList = listString.split(",(?=(?:[^\"]*\"[^\"]*\")*[^\"]*$)");  // Escape the commas in the comment.
                 if (!listString.equals("")) {
-                    for (String x : usernameList) {
+                    for (String x : postList) {
                         list.add(x);
                     }
                 }
@@ -777,7 +777,7 @@ public class DatabaseSql<T> {
             conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/database", "root", "");
 
             // Insert data into groups table
-            pstmt = conn.prepareStatement("INSERT INTO groups (groupID, groupName, adminID, members, noOfMembers, noOfCreatedPost, noOfDeletedPost, dateOfCreation) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
+            pstmt = conn.prepareStatement("INSERT INTO groups (groupID, groupName, adminID, members, noOfMembers, noOfCreatedPost, noOfDeletedPost) VALUES (?, ?, ?, ?, ?, ?, ?)");
             pstmt.setString(1, group.getGroupID());
             pstmt.setString(2, group.getGroupName());
             pstmt.setString(3, group.getAdminID());
@@ -785,7 +785,6 @@ public class DatabaseSql<T> {
             pstmt.setInt(5, group.getNoOfMembers());
             pstmt.setInt(6, group.getNoOfCreatedPost());
             pstmt.setInt(7, group.getNoOfDeletedPost());
-            pstmt.setString(8, group.getDateOfCreation());
             pstmt.executeUpdate();
 
         } catch (Exception ex) {

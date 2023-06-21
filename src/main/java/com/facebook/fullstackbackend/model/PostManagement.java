@@ -77,7 +77,6 @@ public class PostManagement {
             sc.nextLine();
             createUserPost(user);
         }
-        System.out.println("Failed to create user post");
         return user;
     }
 
@@ -131,7 +130,6 @@ public class PostManagement {
             sc.nextLine();
             createGroupPost(group, user);
         }
-        System.out.println("Failed to create group post");
         return group;
     }
 
@@ -189,7 +187,7 @@ public class PostManagement {
                     strBuilder.append(content);
                     content = "\n" + sc.nextLine();
                 }
-                String comment = strBuilder.toString();
+                String comment = "\"" + strBuilder.toString() + "\"";
                 System.out.println("-------------------------");
 
                 while(choice<0 || choice>2){
@@ -220,7 +218,6 @@ public class PostManagement {
             sc.nextLine();
             commentPost(post, user);
         }
-        System.out.println("Failed to comment post");
         return post;
     }
 
@@ -352,7 +349,6 @@ public class PostManagement {
             sc.nextLine();
             displayPostAction(user, post, history);
         }
-        System.out.println("Failed to display post action");
         return history;       
     }
 
@@ -565,7 +561,6 @@ public class PostManagement {
             sc.nextLine();
             displayUserPosts(user, u1, graph, history);
         }
-        System.out.println("Failed to display user posts");
         return history;
     }
 
@@ -683,7 +678,7 @@ public class PostManagement {
                         }else if(choice==0){  
                             continue;
                         }else{
-                            i++;
+                            i--;
                         }
                     }
                     if(choice<0)
@@ -698,7 +693,6 @@ public class PostManagement {
             sc.nextLine();
             displayGroupPosts(group, user, history);
         }
-        System.out.println("Failed to display group posts");
         return history;
     }
 }

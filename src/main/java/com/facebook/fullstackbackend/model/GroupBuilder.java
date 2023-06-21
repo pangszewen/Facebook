@@ -1,6 +1,5 @@
 package com.facebook.fullstackbackend.model;
 
-import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.InputMismatchException;
 import java.util.Scanner;
@@ -28,7 +27,6 @@ public class GroupBuilder {
         this.noOfMembers = 0;
         this.noOfCreatedPost = 0;
         this.noOfDeletedPost = 0;
-        this.dateOfCreation = String.valueOf(LocalDate.now());
     }
 
     public GroupBuilder(User creator){
@@ -40,7 +38,6 @@ public class GroupBuilder {
         this.noOfMembers = 1;
         this.noOfCreatedPost = 0;
         this.noOfDeletedPost = 0;
-        this.dateOfCreation = String.valueOf(LocalDate.now());
     }
 
     public void setGroupID(String groupID){

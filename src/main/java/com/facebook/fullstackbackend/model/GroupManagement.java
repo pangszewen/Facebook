@@ -69,7 +69,6 @@ public class GroupManagement {
             sc.nextLine();
             createGroup(creator);
         }
-        System.out.println("Failed to create group");
         return creator;
     }
 
@@ -112,7 +111,6 @@ public class GroupManagement {
             sc.nextLine();
             editGroupInfo(group);
         }
-        System.out.println("Failed to edit group info");
         return group;
     }
 
@@ -135,17 +133,7 @@ public class GroupManagement {
                 
                 // Sort the names alphabetically
                 Collections.sort(result, Comparator.comparing(User::getName));
-                /*
-                for(int i=1; i<result.size(); i++){
-                    for(int j=0; j<i; j++){
-                        if(result.get(i).getName().compareTo(result.get(j).getName())<0){
-                            User temp = result.get(i);
-                            result.set(i, result.get(j));
-                            result.set(j, temp);
-                        }
-                    }
-                }
-                */
+
 
                 if(result.size()==0){
                     choice = 2;
@@ -325,7 +313,6 @@ public class GroupManagement {
             sc.nextLine();
             removeMember(group);
         }
-        System.out.println("Failed to remove member");
         return group;
     }
 

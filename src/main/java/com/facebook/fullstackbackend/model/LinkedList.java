@@ -201,7 +201,6 @@ public class LinkedList<E>{
             sc.nextLine();
             iterateForward(user, history, graph);
         }
-        System.out.println("Failed to get history");
         return history;
     }
 

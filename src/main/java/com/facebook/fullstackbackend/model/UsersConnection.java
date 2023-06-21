@@ -264,6 +264,8 @@ public class UsersConnection {
             int choice = 1;
             while(choice!=0){
                 Stack<String> requestList = user.getRequestList();
+
+                // Remove deleted user's friend request.
                 Stack<String> temp = new Stack<>();
                 temp.addAll(requestList);
                 while(!temp.isEmpty()){
@@ -274,6 +276,8 @@ public class UsersConnection {
                     }else
                         temp.pop();
                 }
+
+                requestList = user.getRequestList();
 
                 System.out.println("<" + requestList.size() + " friend requests>");
                 System.out.println("-------------------------");
@@ -288,7 +292,6 @@ public class UsersConnection {
 
                 for(int i=0; i<requestList.size(); i++){
                     User u1 = database.getProfile(requestList.get(i));
-                    System.out.println(requestList.get(i));
                     System.out.println(u1.getName());
                     System.out.println("(" + getTotalMutual(user, u1, graph) + " mutuals)");
                     System.out.println("-------------------------");
@@ -296,6 +299,8 @@ public class UsersConnection {
                         System.out.println("0 - Next");
                     System.out.println("1 - Confirm request");
                     System.out.println("2 - Delete request");
+                    if(i!=0)
+                        System.out.println("3 - Back");
                     System.out.println("-1 - Back to Friends page");
                     System.out.println("*************************");
                     choice = sc.nextInt();
@@ -313,8 +318,15 @@ public class UsersConnection {
                                     i--;
                                 break;
                         case 1: graph = confirmRequest(u1, user, graph);
+                                i--;    // Because size of requestList has changed (-1)
                                 break;
                         case 2: cancelRequest(u1, user);
+                                i--;    
+                                break;
+                        case 3: if(i!=0)
+                                    i = i-2;
+                                else
+                                    i--;
                                 break;
                     }
                 }
@@ -327,7 +339,6 @@ public class UsersConnection {
             sc.nextLine();
             displayRequest(user, graph);
         }
-        System.out.println("Failed to display friend requests");
         return graph;
     }
 

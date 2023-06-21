@@ -82,39 +82,47 @@ public class Admin {
 
     // Method to ban user from using Facebook for a specific duration.
     public void banUser(User user) {
-        // Banning admin users are not allowed
-        if(isAdmin(user)){
-            System.out.println("***This user is an admin. Operation denied***");
+        try{
+            // Banning admin users are not allowed
+            if(isAdmin(user)){
+                System.out.println("***This user is an admin. Operation denied***");
+                System.out.println("*************************");
+                return;
+            }
+            int choice = 6;
+            while(choice<0 || choice>5){
+                System.out.println("Select ban duration:");
+                System.out.println("1 - One week");
+                System.out.println("2 - One month");
+                System.out.println("3 - Three months");
+                System.out.println("4 - Six months");
+                System.out.println("5 - One year");
+                System.out.println("0 - Back");
+                System.out.println("*************************");
+                choice = sc.nextInt();
+                sc.nextLine();
+                System.out.println("*************************");
+                Period duration = null;
+                switch(choice){
+                    case 1 -> duration = Period.ofWeeks(1);
+                    case 2 -> duration = Period.ofMonths(1); 
+                    case 3 -> duration = Period.ofMonths(3);
+                    case 4 -> duration = Period.ofMonths(6);
+                    case 5 -> duration = Period.ofYears(1);
+                }
+                if(choice>0 && choice<6){
+                    user.setBanDuration(String.valueOf(duration));
+                    user.setBanStartDate(String.valueOf(LocalDate.now()));
+                    database.updateUserProfile(user, "banDuration", user.getBanDuration());
+                    database.updateUserProfile(user, "banStartDate", user.getBanStartDate());
+                }
+            }
+        }catch(InputMismatchException e){
             System.out.println("*************************");
-            return;
-        }
-        int choice = 6;
-        while(choice<0 || choice>5){
-            System.out.println("Select ban duration:");
-            System.out.println("1 - One week");
-            System.out.println("2 - One month");
-            System.out.println("3 - Three months");
-            System.out.println("4 - Six months");
-            System.out.println("5 - One year");
-            System.out.println("0 - Back");
+            System.out.println("Invalid input");
             System.out.println("*************************");
-            choice = sc.nextInt();
             sc.nextLine();
-            System.out.println("*************************");
-            Period duration = null;
-            switch(choice){
-                case 1 -> duration = Period.ofWeeks(1);
-                case 2 -> duration = Period.ofMonths(1); 
-                case 3 -> duration = Period.ofMonths(3);
-                case 4 -> duration = Period.ofMonths(6);
-                case 5 -> duration = Period.ofYears(1);
-            }
-            if(choice>0 && choice<6){
-                user.setBanDuration(String.valueOf(duration));
-                user.setBanStartDate(String.valueOf(LocalDate.now()));
-                database.updateUserProfile(user, "banDuration", user.getBanDuration());
-                database.updateUserProfile(user, "banStartDate", user.getBanStartDate());
-            }
+            banUser(user);
         }
     }
 

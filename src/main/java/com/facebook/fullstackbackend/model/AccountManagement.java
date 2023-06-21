@@ -137,7 +137,6 @@ public class AccountManagement {
             sc.nextLine();
             login();
         }
-        System.out.println("Failed to login");
         return user;
     }
 
@@ -231,7 +230,6 @@ public class AccountManagement {
             sc.nextLine();
             setupAccount(user);
         }
-        System.out.println("Failed to setup profile");
         return user;
     }
 
@@ -1305,7 +1303,6 @@ public class AccountManagement {
             sc.nextLine();
             displayGroups(u1);
         }
-        System.out.println("Failed to display groups");
         return u1;
     }
 

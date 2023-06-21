@@ -310,7 +310,6 @@ public class UserBuilder {
             sc.nextLine();
             editPassword(user);
         }
-        System.out.println("Failed to edit password");
         return user;
     }
 
@@ -347,7 +346,6 @@ public class UserBuilder {
             sc.nextLine();
             editName(user);
         }
-        System.out.println("Failed to edit name");
         return user;
     }
 
@@ -396,7 +394,6 @@ public class UserBuilder {
             sc.nextLine();
             editBirthday(user);
         }
-        System.out.println("Failed to edit birthday and age");
         return user;
     }
 
@@ -433,7 +430,6 @@ public class UserBuilder {
             sc.nextLine();
             editAddress(user);
         }
-        System.out.println("Failed to edit address");
         return user;
     }
 
@@ -475,7 +471,6 @@ public class UserBuilder {
             sc.nextLine();
             editGender(user);
         }
-        System.out.println("Failed to edit gender");
         return user;
     }
 
@@ -515,7 +510,6 @@ public class UserBuilder {
             sc.nextLine();
             editStatus(user);
         }
-        System.out.println("Failed to edit relationship status");
         return user;
     }
 
@@ -595,7 +589,6 @@ public class UserBuilder {
             sc.nextLine();
             editHobbies(user);
         }
-        System.out.println("Failed to edit hobbies");
         return user;
     }
 
@@ -690,7 +683,6 @@ public class UserBuilder {
             sc.nextLine();
             editJobs(user);
         }
-        System.out.println("Failed to edit jobs");
         return user;
     }
 
